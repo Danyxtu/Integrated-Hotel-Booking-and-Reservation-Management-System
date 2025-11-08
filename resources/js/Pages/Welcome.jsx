@@ -215,8 +215,8 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             </div>
                             <span className="text-2xl font-bold">LuxStay</span>
                         </div>
-                        <p className="text-amber-200 mb-4">
-                            Premium hotel bookings worldwide • Est. 2024
+                        <p className="4text-amber-200 mb-4">
+                            Premium hotel bookings worldwide • Est. 2025
                         </p>
                         <p className="text-sm text-amber-300/70">
                             Powered by Laravel v{laravelVersion} (PHP v{phpVersion})
