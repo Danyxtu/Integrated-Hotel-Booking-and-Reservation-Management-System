@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('description');
             $table->decimal('price_per_night', 8, 2);
-            $table->int('capacity_adults');
-            $table->int('capacity_children');
+            $table->integer('capacity_adults');
+            $table->integer('capacity_children');
             $table->foreignId('hotel_id')->constrained('hotels')->onDelete('cascade');
             $table->timestamps();
         });
