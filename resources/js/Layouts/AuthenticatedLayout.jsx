@@ -21,6 +21,8 @@ export default function AuthenticatedLayout({ header, children }) {
             route: "admin.hotels.index",
             label: "Manage Hotels",
             active: "admin.hotels.index",
+
+            // Report logs
         },
     ];
 

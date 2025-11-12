@@ -5,8 +5,10 @@ import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
+import { useState, useEffect } from "react";
+import MyMap from "@/Components/MyMap";
 
-// This component represents the "Chevron Right" icon for breadcrumbs
+// --- Breadcrumb Icon ---
 const BreadcrumbIcon = () => (
     <svg
         className="w-5 h-5 text-gray-400"
@@ -22,7 +24,11 @@ const BreadcrumbIcon = () => (
 );
 
 export default function CreateHotel({ auth }) {
-    // Use Inertia's useForm hook to manage form state
+    // --- State for map toggle and coordinates ---
+    const [mapVisible, setMapVisible] = useState(false);
+    const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
+
+    // --- Inertia form setup ---
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         description: "",
@@ -30,14 +36,40 @@ export default function CreateHotel({ auth }) {
         city: "",
         country: "",
         cover_image_url: "",
+        latitude: "",
+        longitude: "",
     });
 
-    // Handle form submission
+    // --- Fetch address from coordinates (reverse geocoding) ---
+    useEffect(() => {
+        if (coordinates.lat && coordinates.lng) {
+            fetchAddress(coordinates.lat, coordinates.lng);
+        }
+    }, [coordinates]);
+
+    const fetchAddress = async (lat, lng) => {
+        try {
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+            );
+            const data = await res.json();
+
+            // Defensive: some fields may not exist
+            setData("address", data.address?.road || "");
+            setData("city", data.address?.city || data.address?.town || "");
+            setData("country", data.address?.country || "");
+            setData("latitude", lat);
+            setData("longitude", lng);
+        } catch (error) {
+            console.error("Reverse geocoding failed:", error);
+        }
+    };
+
+    // --- Form submission ---
     const submit = (e) => {
         e.preventDefault();
-        // POST the form data to the 'admin.hotels.store' route
         post(route("admin.hotels.store"), {
-            onSuccess: () => reset(), // Reset form fields on success
+            onSuccess: () => reset(),
         });
     };
 
@@ -46,23 +78,18 @@ export default function CreateHotel({ auth }) {
             user={auth.user}
             header={
                 <div>
-                    {/* Breadcrumbs Navigation */}
+                    {/* Breadcrumbs */}
                     <nav className="flex items-center text-sm font-medium">
                         <Link
-                            href={route("dashboard")}
-                            className="text-amber-600 hover:text-amber-700"
-                        >
-                            Dashboard
-                        </Link>
-                        <BreadcrumbIcon />
-                        <Link
                             href={route("admin.hotels.index")}
-                            className="text-amber-600 hover:text-amber-700"
+                            className="text-gray-500 hover:underline"
                         >
                             Hotels
                         </Link>
                         <BreadcrumbIcon />
-                        <span className="text-gray-500">Create New Hotel</span>
+                        <span className="text-amber-600 hover:text-amber-700">
+                            Create New Hotel
+                        </span>
                     </nav>
                     <h2 className="mt-2 text-2xl font-bold leading-tight text-amber-900 dark:text-white">
                         Create New Hotel
@@ -98,7 +125,7 @@ export default function CreateHotel({ auth }) {
                                         value={data.name}
                                         className="mt-1 block w-full"
                                         autoComplete="name"
-                                        isFocused={true}
+                                        isFocused
                                         onChange={(e) =>
                                             setData("name", e.target.value)
                                         }
@@ -136,7 +163,24 @@ export default function CreateHotel({ auth }) {
                                     />
                                 </div>
 
-                                {/* Address Fields - Grouped */}
+                                {/* Map Toggle */}
+                                <p
+                                    className="text-blue-600 font-semibold text-end hover:cursor-pointer"
+                                    onClick={() => setMapVisible(!mapVisible)}
+                                >
+                                    {mapVisible ? "Hide Map" : "Show Map"}
+                                </p>
+
+                                {/* Map Component */}
+                                {mapVisible && (
+                                    <div className="mb-6">
+                                        <MyMap
+                                            onLocationSelect={setCoordinates}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Address Fields */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <InputLabel
@@ -162,6 +206,7 @@ export default function CreateHotel({ auth }) {
                                             className="mt-2"
                                         />
                                     </div>
+
                                     <div>
                                         <InputLabel
                                             htmlFor="city"
@@ -207,6 +252,20 @@ export default function CreateHotel({ auth }) {
                                     />
                                 </div>
 
+                                {/* Coordinates Display */}
+                                {coordinates.lat && coordinates.lng && (
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                        <p>
+                                            📍 Latitude:{" "}
+                                            {coordinates.lat.toFixed(6)}
+                                        </p>
+                                        <p>
+                                            📍 Longitude:{" "}
+                                            {coordinates.lng.toFixed(6)}
+                                        </p>
+                                    </div>
+                                )}
+
                                 {/* Cover Image URL */}
                                 <div>
                                     <InputLabel
@@ -228,8 +287,8 @@ export default function CreateHotel({ auth }) {
                                         }
                                     />
                                     <p className="text-sm text-gray-500 mt-2">
-                                        Paste a URL to a photo. We'll add file
-                                        uploads later.
+                                        Paste a URL to a photo. File uploads
+                                        will be added later.
                                     </p>
                                     <InputError
                                         message={errors.cover_image_url}
