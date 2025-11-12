@@ -16,7 +16,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        for ($i = 1; $i <= 20; $i++) {
+            Hotel::factory()->create([
+                'name' => "Hotel {$i}",
+                'description' => "This is a mock description for Hotel {$i}. Enjoy a comfortable stay at our property.",
+                'address' => "Street " . (100 + $i),
+                'city' => ['Manila', 'Cebu', 'Davao', 'Baguio'][$i % 4],
+                'country' => 'Philippines',
+                'cover_image_url' => "https://picsum.photos/seed/hotel{$i}/800/600",
+            ]);
+        }
 
         User::factory()->admin()->create([
             'name' => 'Admin User',
@@ -27,7 +36,5 @@ class DatabaseSeeder extends Seeder
             'name' => 'Unverified User',
             'email' => 'user@luxhome.com',
         ]);
-
-        Hotel::factory(20)->create();
     }
 }

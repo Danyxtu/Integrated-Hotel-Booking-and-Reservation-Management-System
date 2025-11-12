@@ -36,19 +36,8 @@ export default function Index({ auth, hotels }) {
         <AuthenticatedLayout
             user={auth}
             header={
-                // (Header remains the same)
                 <div className="flex items-center justify-between">
                     <div>
-                        <nav className="flex items-center text-sm font-medium">
-                            <Link
-                                href={route("dashboard")}
-                                className="text-amber-600 hover:text-amber-700"
-                            >
-                                Dashboard
-                            </Link>
-                            <BreadcrumbIcon />
-                            <span className="text-gray-500">Manage Hotels</span>
-                        </nav>
                         <h2 className="mt-2 text-2xl font-bold leading-tight text-amber-900 dark:text-white">
                             Hotel Inventory
                         </h2>

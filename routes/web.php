@@ -74,19 +74,18 @@
 
         // We'll keep your /hotels route, but it should be for admins.
         // Let's prefix it with 'admin' to make it clear.
-        Route::prefix('admin')->name('admin.')->group(function () {
+        Route::name('admin.')->group(function () {
             
             // This is your /hotels route, now at /admin/hotels
             Route::get('/hotels', function () {
                 return Inertia::render('Admin/Hotels/Index', [
                     'hotels' => Hotel::paginate(10),
-                    'auth' => Auth::user(),
                 ]);
             })->name('hotels.index'); // Full route name is 'admin.hotels.index'
 
             // (TODO) Add the other admin routes here for CRUD operations
             Route::get('/hotels/create', [HotelController::class, 'create'])->name('hotels.create');
-            Route::get('/hotels/{id}', [HotelController::class, 'show'])->name('hotels.show');
+            Route::get('/hotels/{hotel}', [HotelController::class, 'show'])->name('hotels.show');
             Route::post('/hotels', [HotelController::class, 'store'])->name('hotels.store');
             // Route::get('/hotels/{hotel}', [HotelController::class, 'edit'])->name('hotels.');
             // Route::get('/hotels/{hotel}/edit', [HotelController::class, 'edit'])->name('hotels.edit');

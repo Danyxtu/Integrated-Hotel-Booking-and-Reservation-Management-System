@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Hotel;
 
 class HotelController extends Controller
 {
@@ -14,8 +15,10 @@ class HotelController extends Controller
     {
         return inertia('Admin/Hotels/Create');
     }
-    public function show($id){
-        return Inertia::render('Admin/Hotels/Hotel');
+    public function show(Hotel $hotel){
+        return Inertia::render('Admin/Hotels/Hotel',[
+            'hotel' => $hotel
+        ]);
     }
 
     public function store(Request $request)
