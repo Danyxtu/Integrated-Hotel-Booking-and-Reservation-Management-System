@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class HotelController extends Controller
 {
@@ -12,6 +13,9 @@ class HotelController extends Controller
     public function create()
     {
         return inertia('Admin/Hotels/Create');
+    }
+    public function show($id){
+        return Inertia::render('Admin/Hotels/Hotel');
     }
 
     public function store(Request $request)
@@ -24,7 +28,6 @@ class HotelController extends Controller
             'city' => 'required|string|max:100',
             'country' => 'required|string|max:100',
             'cover_image_url' => 'nullable|url',
-            // Add other necessary fields and validation rules
         ]);
 
         // Create a new hotel record
@@ -32,5 +35,10 @@ class HotelController extends Controller
 
         // Redirect to the hotels index with a success message
         return redirect()->route('admin.hotels.index')->with('success', 'Hotel created successfully.');
+    }
+    public function edit($hotel){
+        /**
+         * Todo
+         */
     }
 }
