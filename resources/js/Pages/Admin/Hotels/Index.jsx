@@ -1,8 +1,8 @@
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Pagination from "@/Components/Pagination";
 import { Head, Link, router } from "@inertiajs/react";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
-// Breadcrumb icon
+// (BreadcrumbIcon component remains the same)
 const BreadcrumbIcon = () => (
     <svg
         className="w-5 h-5 text-gray-400"
@@ -18,26 +18,27 @@ const BreadcrumbIcon = () => (
 );
 
 export default function Index({ auth, hotels }) {
+    console.log("Hotels data:", hotels);
+
     const handleDelete = (hotel) => {
         if (
             confirm(
                 `Are you sure you want to delete the hotel "${hotel.name}"? This action cannot be undone.`
             )
         ) {
-            // Send the DELETE request
             router.delete(route("admin.hotels.destroy", hotel.id), {
-                preserveScroll: true, // Keep user on the same page
+                preserveScroll: true,
             });
         }
     };
 
     return (
         <AuthenticatedLayout
-            user={auth.user}
+            user={auth}
             header={
+                // (Header remains the same)
                 <div className="flex items-center justify-between">
                     <div>
-                        {/* Breadcrumbs Navigation */}
                         <nav className="flex items-center text-sm font-medium">
                             <Link
                                 href={route("dashboard")}
@@ -52,8 +53,6 @@ export default function Index({ auth, hotels }) {
                             Hotel Inventory
                         </h2>
                     </div>
-
-                    {/* "Create New Hotel" button, as per PM */}
                     <Link href={route("admin.hotels.create")}>
                         <button className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition font-medium shadow-md">
                             + Create New Hotel
@@ -67,10 +66,10 @@ export default function Index({ auth, hotels }) {
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-lg">
-                        {/* The responsive table */}
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
+                                    {/* (Table header remains the same) */}
                                     <tr>
                                         <th
                                             scope="col"
@@ -107,55 +106,80 @@ export default function Index({ auth, hotels }) {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    {hotels.data.map((hotel) => (
-                                        <tr
-                                            key={hotel.id}
-                                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                                        >
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                    {hotel.name}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-700 dark:text-gray-300">
-                                                    {hotel.city},{" "}
-                                                    {hotel.country}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                                {/* {hotel.room_types_count} */}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                                {/* {hotel.rooms_count} */}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                                                <Link
-                                                    // href={route(
-                                                    //     "admin.hotels.edit",
-                                                    //     hotel.id
-                                                    // )}
-                                                    className="text-amber-600 hover:text-amber-800"
-                                                >
-                                                    Edit
-                                                </Link>
-                                                <button
-                                                    onClick={() =>
-                                                        handleDelete(hotel)
-                                                    }
-                                                    className="text-red-600 hover:text-red-800"
-                                                >
-                                                    Delete
-                                                </button>
+                                    {/* --- DEFENSIVE CHECK --- */}
+                                    {/* Check if hotels.data is an array and has items */}
+                                    {hotels?.data?.length > 0 ? (
+                                        hotels.data.map((hotel) => (
+                                            <tr
+                                                key={hotel.id}
+                                                className="hover:bg-gray-50 dark:hover:bg-gray-700 hover:cursor-pointer"
+                                                onClick={() =>
+                                                    router.visit(
+                                                        route(
+                                                            "admin.hotels.show",
+                                                            hotel.id
+                                                        )
+                                                    )
+                                                }
+                                            >
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                        {hotel.name}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-700 dark:text-gray-300">
+                                                        {hotel.city},{" "}
+                                                        {hotel.country}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                                    {/* {hotel.room_types_count} */}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                                    {/* {hotel.rooms_count} */}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                                    <Link
+                                                        // href={route(
+                                                        //     "admin.hotels.edit",
+                                                        //     hotel.id
+                                                        // )}
+                                                        className="text-amber-600 hover:text-amber-800"
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleDelete(hotel)
+                                                        }
+                                                        className="text-red-600 hover:text-red-800"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        // --- ELSE ---
+                                        // Render a fallback row if no hotels are found
+                                        <tr>
+                                            <td
+                                                colSpan="5"
+                                                className="px-6 py-4 text-center text-gray-500 dark:text-gray-300"
+                                            >
+                                                No hotels found.
                                             </td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
 
-                        {/* Pagination Component */}
-                        <Pagination links={hotels.links} />
+                        {/* --- DEFENSIVE CHECK --- */}
+                        {/* Use optional chaining here. If hotels or hotels.links is undefined, */}
+                        {/* it will pass `undefined` to Pagination, which our new check handles. */}
+                        <Pagination links={hotels?.links} />
                     </div>
                 </div>
             </div>
