@@ -23,6 +23,9 @@ class DatabaseSeeder extends Seeder
                 'address' => "Street " . (100 + $i),
                 'city' => ['Manila', 'Cebu', 'Davao', 'Baguio'][$i % 4],
                 'country' => 'Philippines',
+                'email' => 'example@gmail.com',
+                'phone' => '+639932146172',
+                'website' => 'https://web.facebook.com/Danyxtu018',
                 'cover_image_url' => "https://picsum.photos/seed/hotel{$i}/800/600",
             ]);
         }

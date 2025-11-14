@@ -7,21 +7,7 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 import { useState, useEffect } from "react";
 import MyMap from "@/Components/MyMap";
-
-// --- Breadcrumb Icon ---
-const BreadcrumbIcon = () => (
-    <svg
-        className="w-5 h-5 text-gray-400"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-    >
-        <path
-            fillRule="evenodd"
-            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-            clipRule="evenodd"
-        />
-    </svg>
-);
+import BreadcrumbIcon from "@/Components/BreadCrumbs";
 
 export default function CreateHotel({ auth }) {
     // --- State for map toggle and coordinates ---
@@ -38,6 +24,9 @@ export default function CreateHotel({ auth }) {
         cover_image_url: "",
         latitude: "",
         longitude: "",
+        email: "",
+        phone: "",
+        website: "",
     });
 
     // --- Fetch address from coordinates (reverse geocoding) ---
@@ -54,7 +43,6 @@ export default function CreateHotel({ auth }) {
             );
             const data = await res.json();
 
-            // Defensive: some fields may not exist
             setData("address", data.address?.road || "");
             setData("city", data.address?.city || data.address?.town || "");
             setData("country", data.address?.country || "");
@@ -78,7 +66,6 @@ export default function CreateHotel({ auth }) {
             user={auth.user}
             header={
                 <div>
-                    {/* Breadcrumbs */}
                     <nav className="flex items-center text-sm font-medium">
                         <Link
                             href={route("admin.hotels.index")}
@@ -87,12 +74,10 @@ export default function CreateHotel({ auth }) {
                             Hotels
                         </Link>
                         <BreadcrumbIcon />
-                        <span className="text-amber-600 hover:text-amber-700">
-                            Create New Hotel
-                        </span>
+                        <span className="text-amber-600">Add New Hotel</span>
                     </nav>
                     <h2 className="mt-2 text-2xl font-bold leading-tight text-amber-900 dark:text-white">
-                        Create New Hotel
+                        Add New Hotel
                     </h2>
                 </div>
             }
@@ -163,6 +148,76 @@ export default function CreateHotel({ auth }) {
                                     />
                                 </div>
 
+                                {/* Contact Info */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <InputLabel
+                                            htmlFor="email"
+                                            value="Email"
+                                        />
+                                        <TextInput
+                                            id="email"
+                                            type="email"
+                                            name="email"
+                                            value={data.email}
+                                            className="mt-1 block w-full"
+                                            onChange={(e) =>
+                                                setData("email", e.target.value)
+                                            }
+                                        />
+                                        <InputError
+                                            message={errors.email}
+                                            className="mt-2"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <InputLabel
+                                            htmlFor="phone"
+                                            value="Phone"
+                                        />
+                                        <TextInput
+                                            id="phone"
+                                            type="text"
+                                            name="phone"
+                                            value={data.phone}
+                                            className="mt-1 block w-full"
+                                            onChange={(e) =>
+                                                setData("phone", e.target.value)
+                                            }
+                                        />
+                                        <InputError
+                                            message={errors.phone}
+                                            className="mt-2"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <InputLabel
+                                            htmlFor="website"
+                                            value="Website"
+                                        />
+                                        <TextInput
+                                            id="website"
+                                            type="url"
+                                            name="website"
+                                            value={data.website}
+                                            className="mt-1 block w-full"
+                                            placeholder="https://example.com"
+                                            onChange={(e) =>
+                                                setData(
+                                                    "website",
+                                                    e.target.value
+                                                )
+                                            }
+                                        />
+                                        <InputError
+                                            message={errors.website}
+                                            className="mt-2"
+                                        />
+                                    </div>
+                                </div>
+
                                 {/* Map Toggle */}
                                 <p
                                     className="text-blue-600 font-semibold text-end hover:cursor-pointer"
@@ -171,7 +226,6 @@ export default function CreateHotel({ auth }) {
                                     {mapVisible ? "Hide Map" : "Show Map"}
                                 </p>
 
-                                {/* Map Component */}
                                 {mapVisible && (
                                     <div className="mb-6">
                                         <MyMap

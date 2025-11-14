@@ -5,25 +5,33 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Hotel;
+use App\Models\RoomType;
 
 class HotelController extends Controller
 {
-    /**
-     * Show the form for creating a new hotel.
-     */
+    public function index()
+    {
+        return Inertia::render('Admin/Hotels/Index', [
+                'hotels' => Hotel::paginate(10),
+            ]);
+    }
+
     public function create()
     {
-        return inertia('Admin/Hotels/Create');
+        return Inertia::render('Admin/Hotels/Create');
     }
-    public function show(Hotel $hotel){
-        return Inertia::render('Admin/Hotels/Hotel',[
+
+    public function show(Hotel $hotel)
+    {
+        $hotel->load('roomTypes');
+
+        return Inertia::render('Admin/Hotels/Hotel', [
             'hotel' => $hotel
         ]);
     }
 
     public function store(Request $request)
     {
-        // Validate the incoming request data
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:500',
@@ -33,15 +41,12 @@ class HotelController extends Controller
             'cover_image_url' => 'nullable|url',
         ]);
 
-        // Create a new hotel record
-        $hotel = \App\Models\Hotel::create($validated);
+        $hotel = Hotel::create($validated,
+    []);
 
-        // Redirect to the hotels index with a success message
-        return redirect()->route('admin.hotels.index')->with('success', 'Hotel created successfully.');
+        return redirect()
+            ->route('admin.hotels.index')
+            ->with('success', 'Hotel created successfully.');
     }
-    public function edit($hotel){
-        /**
-         * Todo
-         */
-    }
+    
 }

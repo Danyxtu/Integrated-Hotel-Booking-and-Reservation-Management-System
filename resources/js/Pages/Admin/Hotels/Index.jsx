@@ -44,7 +44,7 @@ export default function Index({ auth, hotels }) {
                     </div>
                     <Link href={route("admin.hotels.create")}>
                         <button className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition font-medium shadow-md">
-                            + Create New Hotel
+                            + New Hotel
                         </button>
                     </Link>
                 </div>
