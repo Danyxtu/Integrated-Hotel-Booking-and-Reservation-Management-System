@@ -11,4 +11,8 @@ class Room extends Model
         'status',
         'room_type_id'
     ];
+
+    public function roomType(){
+        
+    }
 }

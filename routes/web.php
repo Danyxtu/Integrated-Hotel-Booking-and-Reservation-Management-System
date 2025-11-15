@@ -9,6 +9,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\RoomTypeController;
+use App\Http\Controllers\RoomController; // <-- IMPORT NEW CONTROLLER
+
 // Models
 use App\Models\Hotel;
 
@@ -88,7 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Future:
         // Route::get('/hotels/{hotel}/edit', [HotelController::class, 'edit'])->name('hotels.edit');
         // Route::put('/hotels/{hotel}', [HotelController::class, 'update'])->name('hotels.update');
-        // Route::delete('/hotels/{hotel}', [HotelController::class, 'destroy'])->name('hotels.destroy');
+        Route::delete('/hotels/{hotel}', [HotelController::class, 'destroy'])->name('hotels.destroy');
 
 
         /*
@@ -100,6 +102,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('hotels.room_types', RoomTypeController::class)
             ->shallow()
             ->only(['store', 'edit', 'update', 'destroy']);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Rooms (under a hotel)
+        |--------------------------------------------------------------------------
+        */
+
+        // <-- ADD THIS ROUTE FOR CREATING A ROOM -->
+        Route::post('/hotels/{hotel}/rooms', [RoomController::class, 'store'])
+            ->name('hotels.rooms.store');
+
 
         /*
         |--------------------------------------------------------------------------

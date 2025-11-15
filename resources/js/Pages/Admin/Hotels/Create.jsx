@@ -8,6 +8,7 @@ import SecondaryButton from "@/Components/SecondaryButton";
 import { useState, useEffect } from "react";
 import MyMap from "@/Components/MyMap";
 import BreadcrumbIcon from "@/Components/BreadCrumbs";
+import { MapPinned, MapPinX } from "lucide-react";
 
 export default function CreateHotel({ auth }) {
     // --- State for map toggle and coordinates ---
@@ -219,12 +220,16 @@ export default function CreateHotel({ auth }) {
                                 </div>
 
                                 {/* Map Toggle */}
-                                <p
-                                    className="text-blue-600 font-semibold text-end hover:cursor-pointer"
+                                <div
+                                    className="text-blue-600 flex justify-end pr-3 hover:cursor-pointer"
                                     onClick={() => setMapVisible(!mapVisible)}
                                 >
-                                    {mapVisible ? "Hide Map" : "Show Map"}
-                                </p>
+                                    {mapVisible ? (
+                                        <MapPinX size={28} />
+                                    ) : (
+                                        <MapPinned size={28} />
+                                    )}
+                                </div>
 
                                 {mapVisible && (
                                     <div className="mb-6">

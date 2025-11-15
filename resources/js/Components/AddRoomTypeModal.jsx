@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 import InputLabel from "@/Components/InputLabel";
@@ -7,60 +7,40 @@ import InputError from "@/Components/InputError";
 import { useForm } from "@inertiajs/react";
 
 const AddRoomTypeModal = ({ hotelId, onClose, onSuccess }) => {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        name: "",
-        description: "",
-        price_per_night: "",
-        capacity_adults: "",
-        capacity_children: "",
-        hotel_id: hotelId || "",
-    });
+    const { data, setData, post, processing, errors, reset, wasSuccessful } =
+        useForm({
+            name: "",
+            description: "",
+            price_per_night: "",
+            capacity_adults: "",
+            capacity_children: "",
+            hotel_id: hotelId || "",
+        });
+
+    useEffect(() => {
+        if (wasSuccessful) {
+            reset();
+            onClose?.();
+            onSuccess?.();
+        }
+    }, [wasSuccessful, reset, onClose, onSuccess]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("MODAL: handleSubmit triggered.");
-
         if (!hotelId) {
             console.error("MODAL: Hotel ID missing. Halting submission.");
             return;
         }
-        console.log("MODAL: Hotel ID found:", hotelId);
 
-        try {
-            const targetRoute = route("admin.hotels.room_types.store", {
-                id: hotelId,
-            });
-            console.log("MODAL: Target route calculated:", targetRoute);
-            console.log("MODAL: Form data:", data);
+        const targetRoute = route("admin.hotels.room_types.store", {
+            hotel: hotelId,
+        });
 
-            console.log("MODAL: Calling post()...");
-            post(targetRoute, data, {
-                onSuccess: (page) => {
-                    // console.log("MODAL: post() onSuccess fired.");
-                    // reset();
-
-                    console.log("MODAL: Attempting to call onClose()...");
-                    onClose?.(); // This should trigger the parent's log
-
-                    console.log("MODAL: Attempting to call onSuccess()...");
-                    onSuccess?.();
-                },
-
-                onError: (err) => {
-                    console.error("MODAL: post() onError fired:", err);
-                },
-
-                onFinish: () => {
-                    console.log("MODAL: post() onFinish fired (cleanup).");
-                },
-            });
-            console.log("MODAL: post() call has been initiated.");
-        } catch (error) {
-            console.error("MODAL: A SYNCHRONOUS ERROR OCCURRED!", error);
-            console.error(
-                "This likely means the route() helper failed or 'post' itself threw an error."
-            );
-        }
+        post(targetRoute, {
+            onError: (err) => {
+                console.error("MODAL: post() onError fired:", err);
+            },
+        });
     };
 
     return (

@@ -4,6 +4,7 @@ import Dropdown from "../Components/Dropdown";
 import NavLink from "../Components/NavLink";
 import ResponsiveNavLink from "../Components/ResponsiveNavLink";
 import { Link, usePage } from "@inertiajs/react";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function AuthenticatedLayout({ header, children }) {
     const { auth } = usePage().props;
@@ -212,7 +213,10 @@ export default function AuthenticatedLayout({ header, children }) {
                 </header>
             )}
 
-            <main>{children}</main>
+            <main>
+                {children}
+                <Toaster position="top-right" />
+            </main>
         </div>
     );
 }

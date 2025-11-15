@@ -6,11 +6,13 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Hotel;
 use App\Models\RoomType;
+use Illuminate\Support\Facades\Hash;
 
 class HotelController extends Controller
 {
     public function index()
     {
+        
         return Inertia::render('Admin/Hotels/Index', [
                 'hotels' => Hotel::paginate(10),
             ]);
@@ -49,4 +51,22 @@ class HotelController extends Controller
             ->with('success', 'Hotel created successfully.');
     }
     
+    public function destroy(Request $request, Hotel $hotel)
+    {
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        if (! Hash::check($request->password, $request->user()->password)) {
+            return back()->withErrors([
+                'password' => 'Incorrect password.',
+            ]);
+        }
+
+        $hotel->delete();
+
+        return redirect()
+            ->route('admin.hotels.index')
+            ->with('success', 'Hotel deleted successfully.');
+    }
 }
