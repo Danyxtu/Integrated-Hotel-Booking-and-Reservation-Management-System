@@ -16,7 +16,9 @@ return new class extends Migration
             $table->id();
             $table->string('room_number')->unique();
             $table->string('status')->default(RoomStatus::AVAILABLE->value);
+            $table->foreignId('hotel_id')->constrained('hotels')->onDelete('cascade');
             $table->foreignId('room_type_id')->constrained('room_types')->onDelete('cascade');
+            $table->unique(['hotel_id', 'room_number']);
             $table->timestamps();
         });
     }

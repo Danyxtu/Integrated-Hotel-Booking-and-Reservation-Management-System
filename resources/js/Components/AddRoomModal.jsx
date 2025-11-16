@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import PrimaryButton from "./PrimaryButton";
 import SecondaryButton from "./SecondaryButton";
 import InputLabel from "./InputLabel";
@@ -13,7 +13,6 @@ const AddRoomModal = ({ hotel, onClose }) => {
             room_number: "",
         });
 
-    // Calculate room counts for each type
     const roomCounts = useMemo(() => {
         return (hotel.rooms || []).reduce((acc, room) => {
             acc[room.room_type_id] = (acc[room.room_type_id] || 0) + 1;
@@ -21,27 +20,19 @@ const AddRoomModal = ({ hotel, onClose }) => {
         }, {});
     }, [hotel.rooms]);
 
-    // Get the name of the selected room type
     const selectedRoomTypeName =
         hotel.room_types.find((rt) => rt.id == data.room_type_id)?.name ||
         "Unknown";
 
     useEffect(() => {
-        if (wasSuccessful) {
-            // Reset form but keep the selected room_type_id
-            reset("room_number");
-            // We don't close the modal, to allow for rapid entry of more rooms.
-            // The user can close it manually with "Cancel".
-        }
+        if (wasSuccessful) reset("room_number");
     }, [wasSuccessful, reset]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         post(route("admin.hotels.rooms.store", { hotel: hotel.id }), {
             preserveScroll: true,
-            onError: (err) => {
-                console.error("MODAL: post() onError fired:", err);
-            },
+            onError: (err) => console.error("AddRoomModal error:", err),
         });
     };
 
@@ -68,12 +59,9 @@ const AddRoomModal = ({ hotel, onClose }) => {
                             required
                         >
                             {hotel.room_types.length > 0 ? (
-                                hotel.room_types.map((roomType) => (
-                                    <option
-                                        key={roomType.id}
-                                        value={roomType.id}
-                                    >
-                                        {roomType.name}
+                                hotel.room_types.map((rt) => (
+                                    <option key={rt.id} value={rt.id}>
+                                        {rt.name}
                                     </option>
                                 ))
                             ) : (
@@ -86,23 +74,17 @@ const AddRoomModal = ({ hotel, onClose }) => {
                         {data.room_type_id && (
                             <p className="text-sm text-gray-500 mt-2">
                                 You currently have{" "}
-                                <strong className="text-gray-700">
+                                <strong>
                                     {roomCounts[data.room_type_id] || 0}
                                 </strong>{" "}
                                 rooms of the "
-                                <strong className="text-gray-700">
-                                    {selectedRoomTypeName}
-                                </strong>
-                                " type.
+                                <strong>{selectedRoomTypeName}</strong>" type.
                             </p>
                         )}
                     </div>
 
                     <div>
-                        <InputLabel
-                            htmlFor="room_number"
-                            value="Room Number (e.g., 101, 20B, 'Penthouse')"
-                        />
+                        <InputLabel htmlFor="room_number" value="Room Number" />
                         <TextInput
                             id="room_number"
                             value={data.room_number}
@@ -118,11 +100,7 @@ const AddRoomModal = ({ hotel, onClose }) => {
                         <SecondaryButton type="button" onClick={onClose}>
                             Close
                         </SecondaryButton>
-                        <PrimaryButton
-                            type="submit"
-                            className="bg-green-600 hover:bg-green-700"
-                            disabled={processing}
-                        >
+                        <PrimaryButton type="submit" disabled={processing}>
                             {processing ? "Adding..." : "Add Room"}
                         </PrimaryButton>
                     </div>

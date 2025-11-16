@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Hotel;
 use App\Models\RoomType;
+use App\Models\RoomTypeLookup;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Room;
 
 class HotelController extends Controller
 {
@@ -26,11 +28,19 @@ class HotelController extends Controller
     public function show(Hotel $hotel)
     {
         $hotel->load('roomTypes');
+        $lookups = RoomTypeLookup::all();
+
+        $rooms = Room::whereHas('room_type', function ($query) use ($hotel) {
+            $query->where('hotel_id', $hotel->id);
+        })->get();
 
         return Inertia::render('Admin/Hotels/Hotel', [
-            'hotel' => $hotel
+            'hotel' => $hotel,
+            'roomTypeLookups' => $lookups,
+            'rooms' => $rooms,
         ]);
     }
+
 
     public function store(Request $request)
     {
@@ -69,4 +79,26 @@ class HotelController extends Controller
             ->route('admin.hotels.index')
             ->with('success', 'Hotel deleted successfully.');
     }
+
+    public function update(Request $request, Hotel $hotel)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:150',
+            'country' => 'required|string|max:150',
+            'cover_image_url' => 'nullable|url',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string|max:30',
+            'website' => 'nullable|url',
+        ]);
+
+        $hotel->update($validated);
+
+        return redirect()
+            ->back()
+            ->with('success', 'Hotel updated successfully.');
+    }
+
 }

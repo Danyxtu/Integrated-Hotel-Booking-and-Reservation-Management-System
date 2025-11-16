@@ -7,6 +7,7 @@ use App\Models\Room;
 use App\Enums\RoomStatus;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Models\RoomType;
 
 class RoomController extends Controller
 {
@@ -35,7 +36,6 @@ class RoomController extends Controller
             'room_type_id' => [
                 'required',
                 Rule::exists('room_types', 'id')->where(function ($query) use ($hotel) {
-                    // Ensure the room type belongs to the hotel
                     return $query->where('hotel_id', $hotel->id);
                 }),
             ],
@@ -44,22 +44,19 @@ class RoomController extends Controller
                 'string',
                 'max:255',
                 Rule::unique('rooms')->where(function ($query) use ($hotel) {
-                    // Room number must be unique *for this hotel*
                     return $query->where('hotel_id', $hotel->id);
                 }),
             ],
         ]);
 
-        // Create the room
         Room::create([
             'hotel_id' => $hotel->id,
             'room_type_id' => $validated['room_type_id'],
             'room_number' => $validated['room_number'],
-            'status' => RoomStatus::AVAILABLE->value, // Default to 'available'
+            'status' => RoomStatus::AVAILABLE->value,
         ]);
 
-        // Redirect back with a success flash message
-        return redirect()->back(303)->with('success', 'Room added successfully!');
+        return redirect()->back()->with('success', 'Room added successfully!');
     }
 
     /**

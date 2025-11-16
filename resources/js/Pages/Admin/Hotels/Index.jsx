@@ -4,12 +4,24 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { toast } from "sonner";
 import { useState } from "react";
 import Delete from "../../../Components/Delete";
+import { usePage } from "@inertiajs/react";
+import { useEffect } from "react";
 
 export default function Index({ auth, hotels }) {
     const [toastVisibilty, setToastVisibility] = useState(false);
     const [selectedHotel, setSelectedHotel] = useState(null);
     const [open, setOpen] = useState(false);
     const displayData = (data, fallback = "—") => data || fallback;
+
+    const { flash } = usePage().props;
+    useEffect(() => {
+        if (flash.success) {
+            toast.success(flash.success);
+        }
+        if (flash.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
 
     return (
         <>

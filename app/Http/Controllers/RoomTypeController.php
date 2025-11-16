@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\RoomType;
 use GrahamCampbell\ResultType\Success;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class RoomTypeController extends Controller
 {
@@ -27,13 +29,14 @@ class RoomTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string',
-            'description' => 'nullable|string',
+            'lookup_id' => 'nullable|integer|exists:room_type_lookups,id',
+            'description' => 'required|string',
             'price_per_night' => 'required|numeric',
             'capacity_adults' => 'required|integer',
             'capacity_children' => 'required|integer',
         ]);
 
-        $roomType = RoomType::create([
+        RoomType::create([
             ...$validated, 
             'hotel_id' => $hotel->id
         ]);
@@ -60,16 +63,51 @@ class RoomTypeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'description' => 'required|string',
+            'price_per_night' => 'required|numeric',
+            'capacity_adults' => 'required|integer',
+            'capacity_children' => 'required|integer',
+        ]);
+
+        // Find the room type
+        $roomType = RoomType::findOrFail($id);
+
+        // Update with validated data
+        $roomType->update($validated);
+
+        // Return with success (Inertia-compatible)
+        return redirect()
+            ->back()
+            ->with('success', 'Room type updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        //
-    }
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        if (!Hash::check($request->password, Auth::user()->password)) {
+            return response()->json(['password' => 'Incorrect password.'], 422);
+        }
+        
+
+        // Find the room type
+        $roomType = RoomType::findOrFail($id);
+
+        // Delete it
+        $roomType->delete();
+
+       return redirect()
+            ->back()
+            ->with('success', 'Room type deleted successfully.');
+        }
+
 }
