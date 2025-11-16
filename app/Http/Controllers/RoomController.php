@@ -8,6 +8,7 @@ use App\Enums\RoomStatus;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\RoomType;
+use Illuminate\Database\QueryException;
 
 class RoomController extends Controller
 {
@@ -49,16 +50,22 @@ class RoomController extends Controller
             ],
         ]);
 
-        Room::create([
-            'hotel_id' => $hotel->id,
-            'room_type_id' => $validated['room_type_id'],
-            'room_number' => $validated['room_number'],
-            'status' => RoomStatus::AVAILABLE->value,
-        ]);
+        try {
+            Room::create([
+                'hotel_id' => $hotel->id,
+                'room_type_id' => $validated['room_type_id'],
+                'room_number' => $validated['room_number'],
+                'status' => RoomStatus::AVAILABLE->value,
+            ]);
 
-        return redirect()->back()->with('success', 'Room added successfully!');
-    }
-
+            return redirect()->back()->with('success', 'Room added successfully!');
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23505') { // PostgreSQL unique violation
+                return redirect()->back()->with('error', 'Room number already exists for this hotel!');
+            }
+            throw $e; // rethrow any other database errors
+        }
+    }   
     /**
      * Display the specified resource.
      */

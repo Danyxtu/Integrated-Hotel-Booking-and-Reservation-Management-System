@@ -14,9 +14,11 @@ class HotelController extends Controller
 {
     public function index()
     {
+        $hotels = Hotel::withCount(['roomTypes', 'rooms']) // counts related room types and rooms
+        ->paginate(10);
         
         return Inertia::render('Admin/Hotels/Index', [
-                'hotels' => Hotel::paginate(10),
+                'hotels' => $hotels,
             ]);
     }
 
