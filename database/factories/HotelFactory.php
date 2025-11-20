@@ -17,12 +17,12 @@ class HotelFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->company() . 'Hotel', 
-            'address' => fake()->address(),
-            'city' => fake()->city(),
-            'country' => fake()->country(),
-            'description' => fake()->paragraph(3),
-            'cover_image_url' => fake()->imageUrl(800, 600, 'travel', true, 'Hotel'),
+            'name' => $this->faker->company() . ' Hotel',
+            'address' => $this->faker->streetAddress(),
+            'city' => $this->faker->city(),
+            'country' => $this->faker->country(),
+            'phone' => $this->faker->phoneNumber(),
+            'email' => $this->faker->unique()->safeEmail(),
         ];
     }
 }

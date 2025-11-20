@@ -1,200 +1,303 @@
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import React, { useState } from "react";
+import {
+    Mail,
+    Lock,
+    Eye,
+    EyeOff,
+    Sparkles,
+    Hotel,
+    Shield,
+    Clock,
+} from "lucide-react";
+import Checkbox from "@/Components/Checkbox";
+import InputError from "@/Components/InputError";
+import InputLabel from "@/Components/InputLabel";
+import PrimaryButton from "@/Components/PrimaryButton";
+import TextInput from "@/Components/TextInput";
+import { Head, useForm, Link } from "@inertiajs/react";
 
-export default function Login({ status, canResetPassword }) {
+export default function Login({ canResetPassword }) {
+    const [showPassword, setShowPassword] = useState(false);
+    const [status, setStatus] = useState("");
+    const [loginRole, setLoginRole] = useState("user"); // default role
+
     const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
-        password: '',
+        email: "",
+        password: "",
         remember: false,
+        role: loginRole, // include role in form data
     });
 
-    const submit = (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-
-        post(route('login'), {
-            onFinish: () => reset('password'),
+        post(route("login"), {
+            onFinish: () => reset("password"),
+            onSuccess: () =>
+                setStatus(
+                    `Login successful! Redirecting to ${data.role} dashboard...`
+                ),
         });
     };
 
+    const features = [
+        { icon: Hotel, text: "Access exclusive room deals" },
+        { icon: Clock, text: "Quick & easy booking" },
+        { icon: Shield, text: "Secure payment gateway" },
+    ];
+
+    const toggleRole = () => {
+        const newRole = loginRole === "user" ? "admin" : "user";
+        setLoginRole(newRole);
+        setData("role", newRole); // update role in form data
+    };
+
     return (
-        <GuestLayout>
-            <Head title="Log in - LuxStay" />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-6">
+            <Head title="Login" />
+            <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+                {/* Left Side - Branding & Info */}
+                <div className="hidden lg:block relative">
+                    <div className="absolute -top-20 -left-20 w-64 h-64 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full blur-3xl opacity-20 animate-pulse"></div>
 
-            {/* Background Pattern */}
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-                <div className="absolute inset-0 opacity-5" style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                }}></div>
-            </div>
-
-            {/* Logo and Title */}
-            <div className="text-center mb-8 relative">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-600 rounded-xl shadow-lg mb-4">
-                    <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 3L2 9v11a1 1 0 001 1h18a1 1 0 001-1V9l-10-6zm8 16H4v-8.5l8-4.8 8 4.8V19zm-8-7a2 2 0 110-4 2 2 0 010 4z"/>
-                    </svg>
-                </div>
-                <h1 className="text-3xl font-bold text-amber-900 dark:text-white mb-2">
-                    Welcome Back
-                </h1>
-                <p className="text-amber-700 dark:text-amber-300">
-                    Sign in to manage your bookings
-                </p>
-            </div>
-
-            {/* Login Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-amber-100 dark:border-gray-700 relative">
-                {status && (
-                    <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                        <p className="text-sm font-medium text-green-700 dark:text-green-400">
-                            {status}
-                        </p>
-                    </div>
-                )}
-
-                {/* Email Field */}
-                <div className="mb-6">
-                    <InputLabel 
-                        htmlFor="email" 
-                        value="Email Address" 
-                        className="text-amber-900 dark:text-amber-300 font-medium mb-2"
-                    />
-
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                            </svg>
+                    <div className="relative space-y-8">
+                        <div className="flex items-center gap-3">
+                            <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <Sparkles className="w-8 h-8 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                    LuxeStay
+                                </h1>
+                                <p className="text-sm text-gray-600">
+                                    Premium Hospitality Experience
+                                </p>
+                            </div>
                         </div>
-                        <TextInput
-                            id="email"
-                            type="email"
-                            name="email"
-                            value={data.email}
-                            className="pl-10 block w-full border-amber-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-                            autoComplete="username"
-                            isFocused={true}
-                            placeholder="you@example.com"
-                            onChange={(e) => setData('email', e.target.value)}
-                        />
-                    </div>
 
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                {/* Password Field */}
-                <div className="mb-6">
-                    <InputLabel 
-                        htmlFor="password" 
-                        value="Password" 
-                        className="text-amber-900 dark:text-amber-300 font-medium mb-2"
-                    />
-
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
+                        <div>
+                            <h2 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">
+                                Welcome Back to
+                                <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                    Luxury & Comfort
+                                </span>
+                            </h2>
+                            <p className="text-lg text-gray-600 leading-relaxed">
+                                Sign in to manage your reservations, access
+                                exclusive member benefits, and enjoy seamless
+                                booking experiences.
+                            </p>
                         </div>
-                        <TextInput
-                            id="password"
-                            type="password"
-                            name="password"
-                            value={data.password}
-                            className="pl-10 block w-full border-amber-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-                            autoComplete="current-password"
-                            placeholder="••••••••"
-                            onChange={(e) => setData('password', e.target.value)}
-                        />
+
+                        <div className="space-y-4">
+                            {features.map((feature, idx) => (
+                                <div
+                                    key={idx}
+                                    className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm"
+                                >
+                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
+                                        <feature.icon className="w-5 h-5 text-blue-600" />
+                                    </div>
+                                    <span className="text-gray-700 font-medium">
+                                        {feature.text}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="relative h-64 rounded-2xl overflow-hidden shadow-2xl">
+                            <img
+                                src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=400&fit=crop"
+                                alt="Luxury Hotel"
+                                className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                            <div className="absolute bottom-6 left-6">
+                                <p className="text-white text-lg font-semibold">
+                                    5-Star Luxury Awaits
+                                </p>
+                                <p className="text-white/80 text-sm">
+                                    Join thousands of satisfied guests
+                                </p>
+                            </div>
+                        </div>
                     </div>
-
-                    <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                {/* Remember Me & Forgot Password */}
-                <div className="flex items-center justify-between mb-6">
-                    <label className="flex items-center group cursor-pointer">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) =>
-                                setData('remember', e.target.checked)
-                            }
-                            className="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700 dark:text-gray-300 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition">
-                            Remember me
-                        </span>
-                    </label>
-
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="text-sm text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 font-medium transition"
-                        >
-                            Forgot password?
-                        </Link>
-                    )}
-                </div>
-
-                {/* Submit Button */}
-                <div className="mb-6">
-                    <PrimaryButton 
-                        className="w-full justify-center bg-amber-600 hover:bg-amber-700 focus:bg-amber-700 active:bg-amber-800 focus:ring-amber-500 py-3 text-base font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200" 
-                        disabled={processing}
-                        onClick={submit}
-                    >
-                        {processing ? (
-                            <span className="flex items-center">
-                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Signing in...
+                {/* Right Side - Login Form */}
+                <div className="relative">
+                    <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-12 border border-gray-100">
+                        {/* Mobile Logo */}
+                        <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+                                <Sparkles className="w-7 h-7 text-white" />
+                            </div>
+                            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                LuxeStay
                             </span>
-                        ) : (
-                            'Sign in to your account'
+                        </div>
+
+                        <div className="mb-4 flex justify-end">
+                            {/* Role Toggle Button */}
+                            <button
+                                type="button"
+                                onClick={toggleRole}
+                                className="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                            >
+                                {loginRole === "user"
+                                    ? "Switch to Admin"
+                                    : "Switch to User"}
+                            </button>
+                        </div>
+
+                        <div className="mb-8">
+                            <h3 className="text-3xl text-center font-bold text-gray-900 mb-2">
+                                {loginRole === "user"
+                                    ? "User Sign In"
+                                    : "Admin Sign In"}
+                            </h3>
+                            <p className="text-gray-600 text-center">
+                                Enter your credentials to access your{" "}
+                                {loginRole} account
+                            </p>
+                        </div>
+
+                        {status && (
+                            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                                <p className="text-sm font-medium text-green-700">
+                                    {status}
+                                </p>
+                            </div>
                         )}
-                    </PrimaryButton>
-                </div>
 
-                {/* Divider */}
-                <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-amber-200 dark:border-gray-600"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                        <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                            New to LuxStay?
-                        </span>
-                    </div>
-                </div>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Email */}
+                            <div>
+                                <InputLabel
+                                    htmlFor="email"
+                                    value="Email Address"
+                                />
+                                <TextInput
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    value={data.email}
+                                    className="mt-1 block w-full"
+                                    autoComplete="username"
+                                    isFocused
+                                    onChange={(e) =>
+                                        setData("email", e.target.value)
+                                    }
+                                />
+                                <InputError
+                                    message={errors.email}
+                                    className="mt-2"
+                                />
+                            </div>
 
-                {/* Register Link */}
-                <div className="text-center">
-                    <Link
-                        href={route('register')}
-                        className="inline-flex items-center text-sm font-medium text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 transition"
-                    >
-                        Create an account
-                        <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
-                    </Link>
+                            {/* Password */}
+                            <div>
+                                <InputLabel
+                                    htmlFor="password"
+                                    value="Password"
+                                />
+                                <div className="relative">
+                                    <TextInput
+                                        id="password"
+                                        type={
+                                            showPassword ? "text" : "password"
+                                        }
+                                        name="password"
+                                        value={data.password}
+                                        className="mt-1 block w-full pr-12"
+                                        autoComplete="current-password"
+                                        onChange={(e) =>
+                                            setData("password", e.target.value)
+                                        }
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="w-5 h-5" />
+                                        ) : (
+                                            <Eye className="w-5 h-5" />
+                                        )}
+                                    </button>
+                                </div>
+                                <InputError
+                                    message={errors.password}
+                                    className="mt-2"
+                                />
+                            </div>
+
+                            {/* Remember Me */}
+                            <div className="flex items-center justify-between">
+                                <label className="flex items-center cursor-pointer">
+                                    <Checkbox
+                                        name="remember"
+                                        checked={data.remember}
+                                        onChange={(e) =>
+                                            setData(
+                                                "remember",
+                                                e.target.checked
+                                            )
+                                        }
+                                    />
+                                    <span className="ml-2 text-sm text-gray-700">
+                                        Remember me
+                                    </span>
+                                </label>
+
+                                {canResetPassword && (
+                                    <Link
+                                        href={route("password.request")}
+                                        className="text-sm text-blue-600 hover:underline"
+                                    >
+                                        Forgot your password?
+                                    </Link>
+                                )}
+                            </div>
+
+                            {/* Submit Button */}
+                            <PrimaryButton
+                                className="w-full flex justify-center py-4 text-lg"
+                                disabled={processing}
+                            >
+                                {processing ? "Signing in..." : "Sign In"}
+                            </PrimaryButton>
+                        </form>
+
+                        {/* Register Link */}
+                        {loginRole === "user" && (
+                            <p className="mt-8 text-center text-gray-600">
+                                Don't have an account?{" "}
+                                <Link
+                                    href={route("register")}
+                                    className="font-semibold text-blue-600 hover:underline"
+                                >
+                                    Create Account
+                                </Link>
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Bottom Note */}
+                    <p className="mt-6 text-center text-sm text-gray-500">
+                        By signing in, you agree to our{" "}
+                        <Link className="text-blue-600 hover:underline">
+                            Terms of Service
+                        </Link>{" "}
+                        and{" "}
+                        <Link className="text-blue-600 hover:underline">
+                            Privacy Policy
+                        </Link>
+                    </p>
                 </div>
             </div>
-
-            {/* Footer */}
-            <div className="mt-8 text-center relative">
-                <p className="text-sm text-amber-700 dark:text-amber-400">
-                    🔒 Your information is secure and encrypted
-                </p>
-            </div>
-        </GuestLayout>
+        </div>
     );
 }

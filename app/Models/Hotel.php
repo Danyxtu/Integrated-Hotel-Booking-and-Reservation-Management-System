@@ -2,34 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Hotel extends Model
 {
-
-    /**
-     * The attributes that are mass assignable.
-     */
+    /** @use HasFactory<\Database\Factories\HotelFactory> */
     use HasFactory;
+
     protected $fillable = [
         'name',
-        'description',
         'address',
         'city',
         'country',
-        'email',
         'phone',
-        'website',
-        'cover_image_url',
+        'email',
     ];
 
-    public function rooms()
-    {
-        return $this->hasMany(Room::class);
+    public function rooms(){
+        return $this->hasMany('rooms');
     }
-    public function roomTypes(){
-        return $this->hasMany(RoomType::class);
-    }
-
 }

@@ -2,20 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Enums\PaymentStatus;
 
 class Payment extends Model
 {
+    /** @use HasFactory<\Database\Factories\PaymentFactory> */
+    use HasFactory;
+
     protected $fillable = [
-        'amount',
-        'provider',
-        'provider_id',
-        'status',
         'booking_id',
+        'amount',
+        'payment_date',
+        'status',
+        'payment_method',
     ];
 
-    public function booking()
-    {
-        return $this->belongsTo(Booking::class);
-    }
+    protected $casts = [
+        'status' => PaymentStatus::class,
+        'payment_date' => 'datetime',
+    ];
 }

@@ -2,13 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Hotel;
 use App\Models\Room;
-use App\Enums\RoomStatus;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use App\Models\RoomType;
-use Illuminate\Database\QueryException;
 
 class RoomController extends Controller
 {
@@ -31,45 +26,15 @@ class RoomController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, Hotel $hotel)
+    public function store(Request $request)
     {
-        $validated = $request->validate([
-            'room_type_id' => [
-                'required',
-                Rule::exists('room_types', 'id')->where(function ($query) use ($hotel) {
-                    return $query->where('hotel_id', $hotel->id);
-                }),
-            ],
-            'room_number' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('rooms')->where(function ($query) use ($hotel) {
-                    return $query->where('hotel_id', $hotel->id);
-                }),
-            ],
-        ]);
+        //
+    }
 
-        try {
-            Room::create([
-                'hotel_id' => $hotel->id,
-                'room_type_id' => $validated['room_type_id'],
-                'room_number' => $validated['room_number'],
-                'status' => RoomStatus::AVAILABLE->value,
-            ]);
-
-            return redirect()->back()->with('success', 'Room added successfully!');
-        } catch (QueryException $e) {
-            if ($e->getCode() === '23505') { // PostgreSQL unique violation
-                return redirect()->back()->with('error', 'Room number already exists for this hotel!');
-            }
-            throw $e; // rethrow any other database errors
-        }
-    }   
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Room $room)
     {
         //
     }
@@ -77,7 +42,7 @@ class RoomController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Room $room)
     {
         //
     }
@@ -85,7 +50,7 @@ class RoomController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Room $room)
     {
         //
     }
@@ -93,7 +58,7 @@ class RoomController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Room $room)
     {
         //
     }
