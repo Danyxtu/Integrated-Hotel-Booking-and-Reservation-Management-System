@@ -1,90 +1,108 @@
 import React, { useState } from "react";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { User, Hotel, Calendar, LogOut, CheckCircle2, ArrowRightCircle } from "lucide-react";
-
-// Helper to format dates to 'YYYY-MM-DD'
-const formatDate = (date) => date.toISOString().split('T')[0];
-
-// Mock data for bookings checking out today
-const mockCheckOutsToday = [
-    {
-        id: "BK002",
-        guestName: "Jane Smith",
-        roomNumber: "205",
-        roomType: "Standard Room",
-        checkInDate: "2025-11-18",
-        checkOutDate: formatDate(new Date()),
-        status: "CheckedIn",
-    },
-    {
-        id: "BK004",
-        guestName: "Mary Johnson",
-        roomNumber: "105",
-        roomType: "Standard Room",
-        checkInDate: "2025-11-18",
-        checkOutDate: formatDate(new Date()),
-        status: "CheckedOut", // Already checked out
-    },
-    {
-        id: "BK018",
-        guestName: "James Bond",
-        roomNumber: "707",
-        roomType: "Honeymoon Suite",
-        checkInDate: "2025-11-15",
-        checkOutDate: formatDate(new Date()),
-        status: "CheckedIn",
-    },
-    {
-        id: "BK019",
-        guestName: "Natasha Romanoff",
-        roomNumber: "303",
-        roomType: "Deluxe Suite",
-        checkInDate: "2025-11-17",
-        checkOutDate: formatDate(new Date()),
-        status: "CheckedIn",
-    },
-];
+import {
+    FileDown,
+    CheckCircle2,
+    ArrowRightCircle,
+    Clock,
+    XCircle,
+    Ban,
+    CircleOff,
+} from "lucide-react";
+import { router } from "@inertiajs/react"; // Import router for Inertia calls
 
 const statusStyles = {
-    CheckedIn: {
+    Pending: {
+        icon: Clock,
+        bgColor: "bg-yellow-100",
+        textColor: "text-yellow-800",
+        label: "Pending",
+    },
+    Confirmed: {
+        icon: CheckCircle2,
+        bgColor: "bg-green-100",
+        textColor: "text-green-800",
+        label: "Confirmed",
+    },
+    "Checked In": {
         icon: ArrowRightCircle,
         bgColor: "bg-blue-100",
         textColor: "text-blue-800",
         label: "Checked In",
     },
-    CheckedOut: {
+    "Checked Out": {
         icon: CheckCircle2,
         bgColor: "bg-gray-100",
         textColor: "text-gray-800",
         label: "Checked Out",
     },
+    Cancelled: {
+        icon: XCircle,
+        bgColor: "bg-red-100",
+        textColor: "text-red-800",
+        label: "Cancelled",
+    },
+    "No Show": {
+        icon: Ban,
+        bgColor: "bg-purple-100",
+        textColor: "text-purple-800",
+        label: "No Show",
+    },
+    Expired: {
+        icon: CircleOff,
+        bgColor: "bg-pink-100",
+        textColor: "text-pink-800",
+        label: "Expired",
+    },
 };
 
-const CheckOutsToday = () => {
-    const [checkOuts, setCheckOuts] = useState(mockCheckOutsToday);
+const CheckOutsToday = ({ checkouts }) => {
+    const [activeCategory, setActiveCategory] = useState("today"); // 'today' or 'recent'
 
-    const handleCheckOut = (bookingId) => {
-        setCheckOuts((prevCheckOuts) =>
-            prevCheckOuts.map((booking) =>
-                booking.id === bookingId
-                    ? { ...booking, status: "CheckedOut" }
-                    : booking
-            )
-        );
-        console.log(`Booking ${bookingId} checked out.`);
+    const today = new Date().toISOString().split('T')[0];
+
+    const todaysCheckouts = checkouts.filter(
+        (b) => new Date(b.check_out_date).toISOString().split('T')[0] === today
+    );
+
+    const recentCheckouts = checkouts.filter(
+        (b) => b.status_label === "Checked Out"
+    );
+
+    const currentCheckouts = activeCategory === "today" ? todaysCheckouts : recentCheckouts;
+
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+        return new Date(dateString).toISOString().split("T")[0];
     };
 
     const getStatusChip = (status) => {
-        const style = statusStyles[status] || {};
-        const Icon = style.icon;
+        const style = statusStyles[status];
+        if (!style) return null;
+        const { icon: Icon, bgColor, textColor, label } = style;
         return (
             <span
-                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${style.bgColor || 'bg-gray-100'} ${style.textColor || 'text-gray-800'}`}
+                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${bgColor} ${textColor}`}
             >
-                {Icon && <Icon className="w-3.5 h-3.5" />}
-                {style.label || status}
+                <Icon className="w-3.5 h-3.5" />
+                {label}
             </span>
         );
+    };
+
+    const handleCheckOut = (bookingId) => {
+        if (
+            confirm(
+                "Are you sure you want to mark this booking as Checked Out?"
+            )
+        ) {
+            router.put(
+                route("admin.bookings.updateStatus", { booking: bookingId }),
+                {
+                    status: "Checked Out",
+                }
+            );
+        }
     };
 
     return (
@@ -94,89 +112,116 @@ const CheckOutsToday = () => {
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800">
-                            Check-outs Today
+                            Check-outs
                         </h1>
                         <p className="text-gray-500 mt-1">
-                            Guests scheduled to check out on {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+                            Manage and view guest check-outs.
                         </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
+                            <FileDown className="w-4 h-4" />
+                            Export
+                        </button>
                     </div>
                 </div>
 
-                {/* Table of Check-outs */}
+                {/* Category Filters */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setActiveCategory("today")}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${
+                            activeCategory === "today"
+                                ? "bg-blue-600 text-white shadow"
+                                : "bg-white text-gray-600 hover:bg-gray-100 border"
+                        }`}
+                    >
+                        Today's Checkouts
+                    </button>
+                    <button
+                        onClick={() => setActiveCategory("recent")}
+                        className={`px-4 py-2 text-sm font-semibold rounded-lg transition ${
+                            activeCategory === "recent"
+                                ? "bg-blue-600 text-white shadow"
+                                : "bg-white text-gray-600 hover:bg-gray-100 border"
+                        }`}
+                    >
+                        Recent Checkouts
+                    </button>
+                </div>
+
+
+                {/* Bookings Table */}
                 <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200/80">
                     <table className="w-full text-sm text-left text-gray-600">
                         <thead className="bg-gray-50/80 text-xs text-gray-700 uppercase tracking-wider">
                             <tr>
-                                <th scope="col" className="px-6 py-4">
-                                    Booking ID
-                                </th>
-                                <th scope="col" className="px-6 py-4">
-                                    Guest Name
-                                </th>
-                                <th scope="col" className="px-6 py-4">
-                                    Room
-                                </th>
-                                <th scope="col" className="px-6 py-4">
-                                    Check-in Date
-                                </th>
-                                <th scope="col" className="px-6 py-4">
-                                    Check-out Date
-                                </th>
-                                <th scope="col" className="px-6 py-4 text-center">
+                                <th className="px-6 py-4">Booking ID</th>
+                                <th className="px-6 py-4">Guest</th>
+                                <th className="px-6 py-4">Dates</th>
+                                <th className="px-6 py-4">Room Type</th>
+                                <th className="px-6 py-4 text-right">Total</th>
+                                <th className="px-6 py-4 text-center">
                                     Status
                                 </th>
-                                <th scope="col" className="px-6 py-4 text-center">
-                                    Actions
+                                <th className="px-6 py-4 text-center">
+                                    Action
                                 </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                            {checkOuts.length > 0 ? (
-                                checkOuts.map((booking) => (
-                                    <tr key={booking.id} className="hover:bg-gray-50 transition">
-                                        <td className="px-6 py-4 font-mono text-blue-600">
-                                            {booking.id}
-                                        </td>
-                                        <td className="px-6 py-4 font-semibold text-gray-800">
-                                            {booking.guestName}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {booking.roomNumber} - {booking.roomType}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {booking.checkInDate}
-                                        </td>
-                                        <td className="px-6 py-4 font-semibold">
-                                            {booking.checkOutDate}
-                                        </td>
-                                        <td className="px-6 py-4 flex justify-center">
-                                            {getStatusChip(booking.status)}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            {booking.status === "CheckedIn" ? (
+                            {currentCheckouts.map((booking) => (
+                                <tr
+                                    key={booking.id}
+                                    className="hover:bg-gray-50 transition"
+                                >
+                                    <td className="px-6 py-4 font-mono text-blue-600">
+                                        {booking.booking_number}
+                                    </td>
+                                    <td className="px-6 py-4 font-semibold text-gray-800">
+                                        {booking.customer?.first_name}{" "}
+                                        {booking.customer?.last_name}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {formatDate(booking.check_in_date)}{" "}
+                                        &rarr;{" "}
+                                        {formatDate(booking.check_out_date)}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {booking.room?.room_type?.name}
+                                    </td>
+                                    <td className="px-6 py-4 font-mono text-right">
+                                        $
+                                        {parseFloat(
+                                            booking.total_price
+                                        ).toFixed(2)}
+                                    </td>
+                                    <td className="px-6 py-4 flex justify-center">
+                                        {getStatusChip(booking.status_label)}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex justify-center items-center gap-2">
+                                            {booking.status_label ===
+                                            "Checked In" ? (
                                                 <button
-                                                    onClick={() => handleCheckOut(booking.id)}
-                                                    className="flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-red-500 rounded-md hover:bg-red-600 transition"
+                                                    onClick={() =>
+                                                        handleCheckOut(
+                                                            booking.id
+                                                        )
+                                                    }
+                                                    className="px-3 py-1 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition shadow-sm"
                                                 >
-                                                    <LogOut className="w-3.5 h-3.5"/>
                                                     Check Out
                                                 </button>
                                             ) : (
-                                                <span className="text-gray-400 text-xs">Completed</span>
+                                                <span className="text-gray-500 text-sm">
+                                                    Completed
+                                                </span>
                                             )}
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="7" className="px-6 py-10 text-center text-gray-500">
-                                        <div className="flex flex-col items-center justify-center">
-                                            <Calendar className="w-10 h-10 text-gray-400 mb-2"/>
-                                            <p className="font-semibold">No check-outs scheduled for today.</p>
                                         </div>
                                     </td>
                                 </tr>
-                            )}
+                            ))}
                         </tbody>
                     </table>
                 </div>

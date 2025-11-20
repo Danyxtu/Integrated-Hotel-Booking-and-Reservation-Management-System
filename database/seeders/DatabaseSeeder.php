@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\RoomType;
 use App\Models\Room;
 use App\Models\Customer;
-use App\Models\Booking;
+use App\Models\Booking; // Added this line
 use App\Models\Payment;
 
 class DatabaseSeeder extends Seeder
@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'admin@gmail.com'],
             [
-                'name' => 'admin',
+                'first_name' => 'Admin',
+                'last_name' => 'Test',
                 'password' => Hash::make('password'),
                 'role' => 'admin',
             ]
@@ -32,7 +33,8 @@ class DatabaseSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'user@gmail.com'],
             [
-                'name' => 'user',
+                'first_name' => 'User',
+                'last_name' => 'Test',
                 'password' => Hash::make('password'),
                 'role' => 'user',
             ]
@@ -52,12 +54,16 @@ class DatabaseSeeder extends Seeder
 
         $customers = Customer::factory()->count(20)->create();
         $rooms = Room::all();
+        $bookingCounter = 10000; // Initialize counter for booking numbers
 
         for ($i = 0; $i < 50; $i++) {
-            $booking = Booking::factory()->create([
-                'customer_id' => $customers->random()->id,
-                'room_id' => $rooms->random()->id,
-            ]);
+            $booking =  Booking::factory()->create([
+                            'customer_id' => $customers->random()->id,
+                            'room_id' => $rooms->random()->id,
+                            'booking_source' => 'walk_in', // optional
+                            'booking_number' => 'BK' . (++$bookingCounter), // Explicitly generate booking number
+                        ]);
+
             Payment::factory()->create([
                 'booking_id' => $booking->id,
                 'amount' => $booking->total_price,

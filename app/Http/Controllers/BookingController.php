@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use App\Models\Customer;
 
 class BookingController extends Controller
 {
@@ -28,22 +29,46 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
-         $request->validate([
-            'customer_id'    => 'required|exists:customers,id',
+        $validated = $request->validate([
             'room_id'        => 'required|exists:rooms,id',
             'check_in_date'  => 'required|date|before_or_equal:check_out_date',
             'check_out_date' => 'required|date|after_or_equal:check_in_date',
             'total_price'    => 'required|numeric|min:0',
-            'status'         => 'required|in:pending,confirmed,checked_in,checked_out,cancelled', // match your enum
+            'status'         => 'required|in:Pending,Confirmed,Cancelled,Checked In,Checked Out,No Show,Expired',
+            'first_name'     => 'required|string|max:255',
+            'last_name'      => 'required|string|max:255',
+            'phone'          => 'required|string|max:20',
+        ]);
+
+        // Generate unique booking number
+        $lastBooking = Booking::latest('id')->first();
+        $number = $lastBooking ? $lastBooking->id + 1 : 1;
+        $bookingNumber = 'BK' . str_pad($number, 5, '0', STR_PAD_LEFT);
+
+        // Create walk-in customer
+        $customer = Customer::create([
+            'first_name' => $validated['first_name'],
+            'last_name'  => $validated['last_name'],
+            'phone'      => $validated['phone'],
+            'type'       => 'walk_in', // make sure this column exists
+            'user_id'    => null,      // walk-ins don't have a user account
         ]);
 
         // Create booking
-        $booking = Booking::create($request->all());
+        $booking = Booking::create([
+            'customer_id'    => $customer->id,
+            'room_id'        => $validated['room_id'],
+            'check_in_date'  => $validated['check_in_date'],
+            'check_out_date' => $validated['check_out_date'],
+            'total_price'    => $validated['total_price'],
+            'status'         => $validated['status'], // fixed
+            'booking_source' => 'walk_in',
+            'booking_number' => $bookingNumber,
+        ]);
 
-        // Optionally, return redirect or Inertia response
         return redirect()->route('admin.dashboard')->with('success', 'Booking created successfully.');
-
     }
+
 
     /**
      * Display the specified resource.

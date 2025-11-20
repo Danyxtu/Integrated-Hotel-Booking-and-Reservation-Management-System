@@ -8,7 +8,6 @@ use App\Models\Booking;
 use App\Models\Room;
 use App\Models\Payment;
 use App\Models\Customer;
-use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus as EnumsPaymentStatus;
 use Carbon\Carbon;
 
@@ -41,9 +40,10 @@ class AdminController extends Controller
             ->sum('amount');
         
         $pendingCheckIns = Booking::where('check_in_date', '=', now()->format('Y-m-d'))
-            ->where('status', BookingStatus::Confirmed)
+            ->where('status', 'Pending')
             ->count();
 
+        
         $stats = [
             [
                 'name' => 'Total Bookings',

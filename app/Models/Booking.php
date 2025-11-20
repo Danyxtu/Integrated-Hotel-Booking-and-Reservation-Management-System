@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Enums\BookingStatus;
 
 class Booking extends Model
 {
@@ -13,14 +12,15 @@ class Booking extends Model
 
     protected $fillable = [
         'customer_id',
+        'booking_number',
         'room_id',
         'check_in_date',
         'check_out_date',
         'total_price',
+        'booking_source',
         'status',
     ];
     protected $casts = [
-        'status' => BookingStatus::class,
         'check_in_date' => 'datetime',
         'check_out_date' => 'datetime',
     ];

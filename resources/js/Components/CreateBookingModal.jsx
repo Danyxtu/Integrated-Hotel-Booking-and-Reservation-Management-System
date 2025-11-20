@@ -6,18 +6,27 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 
-const CreateBookingModal = ({ show, onClose, customers, rooms }) => {
+const CreateBookingModal = ({ show, onClose, rooms }) => {
+    // Add a guard clause for rooms
+    if (!Array.isArray(rooms)) {
+        console.error("CreateBookingModal received invalid rooms prop:", rooms);
+        return null; // Or render a fallback UI
+    }
+
     const { data, setData, post, processing, errors, reset } = useForm({
-        customer_id: "",
+        first_name: "",
+        last_name: "",
+        phone: "",
         room_id: "",
         check_in_date: "",
         check_out_date: "",
         total_price: "",
-        status: "pending",
+        status: "Pending",
     });
 
     const submit = (e) => {
         e.preventDefault();
+        // Post to the backend; backend will create customer and booking
         post(route("admin.bookings.store"), {
             onSuccess: () => {
                 reset();
@@ -27,35 +36,71 @@ const CreateBookingModal = ({ show, onClose, customers, rooms }) => {
     };
 
     return (
-        <Modal show={show} onClose={onClose}>
+        <Modal show={show} onClose={onClose} maxWidth="xl">
             <form onSubmit={submit} className="p-6 space-y-4">
                 <h2 className="text-lg font-medium text-gray-900">
-                    Create New Booking
+                    Create Booking
                 </h2>
 
+                {/* Walk-in Customer Info */}
+                <div className="flex justify-between gap-2">
+                    <div className="w-1/2">
+                        <InputLabel htmlFor="first_name" value="First Name" />
+                        <TextInput
+                            id="first_name"
+                            type="text"
+                            value={data.first_name}
+                            onChange={(e) =>
+                                setData("first_name", e.target.value)
+                            }
+                            className="mt-1 block w-full"
+                            required
+                        />
+                        {errors.first_name && (
+                            <p className="text-red-500 text-xs mt-1">
+                                {errors.first_name}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="w-1/2">
+                        <InputLabel htmlFor="last_name" value="Last Name" />
+                        <TextInput
+                            id="last_name"
+                            type="text"
+                            value={data.last_name}
+                            onChange={(e) =>
+                                setData("last_name", e.target.value)
+                            }
+                            className="mt-1 block w-full"
+                            required
+                        />
+                        {errors.last_name && (
+                            <p className="text-red-500 text-xs mt-1">
+                                {errors.last_name}
+                            </p>
+                        )}
+                    </div>
+                </div>
+
                 <div>
-                    <InputLabel htmlFor="customer_id" value="Customer" />
-                    <select
-                        id="customer_id"
-                        value={data.customer_id}
-                        onChange={(e) => setData("customer_id", e.target.value)}
-                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                    <InputLabel htmlFor="phone" value="Phone Number" />
+                    <TextInput
+                        id="phone"
+                        type="text"
+                        value={data.phone}
+                        onChange={(e) => setData("phone", e.target.value)}
+                        className="mt-1 block w-full"
                         required
-                    >
-                        <option value="">Select Customer</option>
-                        {customers.map((c) => (
-                            <option key={c.id} value={c.id}>
-                                {c.name}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.customer_id && (
+                    />
+                    {errors.phone && (
                         <p className="text-red-500 text-xs mt-1">
-                            {errors.customer_id}
+                            {errors.phone}
                         </p>
                     )}
                 </div>
 
+                {/* Room Selection */}
                 <div>
                     <InputLabel htmlFor="room_id" value="Room" />
                     <select
@@ -67,9 +112,12 @@ const CreateBookingModal = ({ show, onClose, customers, rooms }) => {
                     >
                         <option value="">Select Room</option>
                         {rooms.map((r) => (
-                            <option key={r.id} value={r.id}>
-                                {r.name}
-                            </option>
+                            // Conditional rendering for valid room objects
+                            r && r.id && r.room_type?.name ? (
+                                <option key={r.id} value={r.id}>
+                                    {r.room_type.name} - {r.room_number}
+                                </option>
+                            ) : null
                         ))}
                     </select>
                     {errors.room_id && (
@@ -79,6 +127,7 @@ const CreateBookingModal = ({ show, onClose, customers, rooms }) => {
                     )}
                 </div>
 
+                {/* Booking Dates */}
                 <div>
                     <InputLabel htmlFor="check_in_date" value="Check-in Date" />
                     <TextInput
@@ -137,6 +186,7 @@ const CreateBookingModal = ({ show, onClose, customers, rooms }) => {
                     )}
                 </div>
 
+                {/* Action Buttons */}
                 <div className="mt-6 flex justify-end">
                     <SecondaryButton onClick={onClose}>Cancel</SecondaryButton>
                     <PrimaryButton className="ms-3" disabled={processing}>

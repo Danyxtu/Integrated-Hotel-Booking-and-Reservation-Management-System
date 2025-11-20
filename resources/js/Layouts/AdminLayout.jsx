@@ -21,8 +21,10 @@ const AdminLayout = ({ children }) => {
     const [isLogoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
     const { url } = usePage();
-    const user = usePage().props.auth;
-    console.log(user);
+    const user = usePage().props.auth.user;
+    // console.log(user);
+    // console.log(user.first_name);
+    // console.log(user.last_name);
 
     const menuItems = [
         {
@@ -73,7 +75,8 @@ const AdminLayout = ({ children }) => {
             name: "Guests & Users",
             icon: Users,
             submenu: [
-                { name: "All Guests", path: "admin.users.guests" },
+                { name: "All Customers", path: "admin.users.customers" },
+                { name: "Admin Accounts", path: "admin.users.admins" }, // New link
                 { name: "Staff Members", path: "admin.users.staff" },
                 { name: "User Roles", path: "admin.users.roles" },
             ],
@@ -164,7 +167,7 @@ const AdminLayout = ({ children }) => {
                             </div>
                             <div>
                                 <h1 className="text-xl font-bold text-gray-900">
-                                    LuxeStay
+                                    LuxStay
                                 </h1>
                                 <p className="text-xs text-gray-500">
                                     Admin Panel
@@ -262,7 +265,7 @@ const AdminLayout = ({ children }) => {
                             </div>
                             <div className="flex-1">
                                 <p className="font-semibold text-sm text-gray-900">
-                                    John Doe
+                                    {user.first_name} {user.last_name}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                     Administrator
@@ -326,7 +329,7 @@ const AdminLayout = ({ children }) => {
                                 </div>
                                 <div className="hidden md:block text-left">
                                     <p className="text-sm font-semibold text-gray-900">
-                                        John Doe
+                                        {user.first_name}
                                     </p>
                                     <p className="text-xs text-gray-500">
                                         Admin

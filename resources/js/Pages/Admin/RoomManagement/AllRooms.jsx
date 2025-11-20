@@ -1,21 +1,12 @@
 import React, { useState } from "react";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { BedDouble, Bath, Wifi, Tv, Wind, DollarSign, Filter, Search, PlusCircle, Edit, MoreVertical, ToggleLeft } from "lucide-react";
-
-// Mock data for rooms
-const mockRooms = [
-    { id: '101', roomType: 'Standard', status: 'Available', bedType: 'Queen', rate: 150, amenities: ['Wifi', 'TV'], imageUrl: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=1974&auto=format&fit=crop' },
-    { id: '102', roomType: 'Standard', status: 'Occupied', bedType: 'Queen', rate: 150, amenities: ['Wifi', 'TV'], imageUrl: 'https://images.unsplash.com/photo-1595526114035-0d45ed16433d?q=80&w=2070&auto=format&fit=crop' },
-    { id: '103', roomType: 'Standard', status: 'Cleaning', bedType: 'Twin', rate: 140, amenities: ['Wifi', 'TV'], imageUrl: 'https://images.unsplash.com/photo-1560185893-a55de8537e49?q=80&w=1974&auto=format&fit=crop' },
-    { id: '201', roomType: 'Deluxe', status: 'Available', bedType: 'King', rate: 250, amenities: ['Wifi', 'TV', 'AC'], imageUrl: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=2070&auto=format&fit=crop' },
-    { id: '202', roomType: 'Deluxe', status: 'Maintenance', bedType: 'King', rate: 250, amenities: ['Wifi', 'TV', 'AC'], imageUrl: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=2070&auto=format&fit=crop' },
-    { id: '301', roomType: 'Suite', status: 'Available', bedType: 'King', rate: 400, amenities: ['Wifi', 'TV', 'AC', 'Bath'], imageUrl: 'https://images.unsplash.com/photo-1568495248636-6412b975d7b3?q=80&w=2070&auto=format&fit=crop' },
-    { id: '302', roomType: 'Suite', status: 'Occupied', bedType: 'King', rate: 400, amenities: ['Wifi', 'TV', 'AC', 'Bath'], imageUrl: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=2070&auto=format&fit=crop' },
-    { id: '401', roomType: 'Family', status: 'Available', bedType: 'Twin + Queen', rate: 350, amenities: ['Wifi', 'TV', 'AC'], imageUrl: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=2070&auto=format&fit=crop' },
-];
-
-const roomTypes = ['All', 'Standard', 'Deluxe', 'Suite', 'Family'];
-const roomStatuses = ['All', 'Available', 'Occupied', 'Cleaning', 'Maintenance'];
+import { useForm } from "@inertiajs/react";
+import Modal from "@/Components/Modal";
+import InputLabel from "@/Components/InputLabel";
+import TextInput from "@/Components/TextInput";
+import SecondaryButton from "@/Components/SecondaryButton";
+import PrimaryButton from "@/Components/PrimaryButton";
 
 const statusStyles = {
     Available: "bg-green-100 text-green-800",
@@ -24,18 +15,172 @@ const statusStyles = {
     Maintenance: "bg-yellow-100 text-yellow-800",
 };
 
-const AllRooms = () => {
+// New component for adding rooms
+const CreateRoomModal = ({ show, onClose, roomTypes, roomStatuses }) => {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        room_number: "",
+        room_type_id: "",
+        price_per_night: "",
+        capacity_adults: "",
+        capacity_children: "",
+        status: "Available",
+    });
+
+    const submit = (e) => {
+        e.preventDefault();
+        post(route("admin.rooms.store"), {
+            onSuccess: () => {
+                reset();
+                onClose();
+            },
+        });
+    };
+
+    return (
+        <Modal show={show} onClose={onClose} maxWidth="xl">
+            <form onSubmit={submit} className="p-6 space-y-4">
+                <h2 className="text-lg font-medium text-gray-900">
+                    Add New Room
+                </h2>
+
+                <div>
+                    <InputLabel htmlFor="room_number" value="Room Number" />
+                    <TextInput
+                        id="room_number"
+                        type="text"
+                        value={data.room_number}
+                        onChange={(e) => setData("room_number", e.target.value)}
+                        className="mt-1 block w-full"
+                        required
+                    />
+                    {errors.room_number && (
+                        <p className="text-red-500 text-xs mt-1">
+                            {errors.room_number}
+                        </p>
+                    )}
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="room_type_id" value="Room Type" />
+                    <select
+                        id="room_type_id"
+                        value={data.room_type_id}
+                        onChange={(e) => setData("room_type_id", e.target.value)}
+                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                        required
+                    >
+                        <option value="">Select Room Type</option>
+                        {roomTypes.map((type) => (
+                            <option key={type.id} value={type.id}>
+                                {type.name}
+                            </option>
+                        ))}
+                    </select>
+                    {errors.room_type_id && (
+                        <p className="text-red-500 text-xs mt-1">
+                            {errors.room_type_id}
+                        </p>
+                    )}
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="price_per_night" value="Price Per Night" />
+                    <TextInput
+                        id="price_per_night"
+                        type="number"
+                        value={data.price_per_night}
+                        onChange={(e) => setData("price_per_night", e.target.value)}
+                        className="mt-1 block w-full"
+                        required
+                    />
+                    {errors.price_per_night && (
+                        <p className="text-red-500 text-xs mt-1">
+                            {errors.price_per_night}
+                        </p>
+                    )}
+                </div>
+
+                <div className="flex justify-between gap-2">
+                    <div className="w-1/2">
+                        <InputLabel htmlFor="capacity_adults" value="Capacity (Adults)" />
+                        <TextInput
+                            id="capacity_adults"
+                            type="number"
+                            value={data.capacity_adults}
+                            onChange={(e) => setData("capacity_adults", e.target.value)}
+                            className="mt-1 block w-full"
+                            required
+                        />
+                        {errors.capacity_adults && (
+                            <p className="text-red-500 text-xs mt-1">
+                                {errors.capacity_adults}
+                            </p>
+                        )}
+                    </div>
+                    <div className="w-1/2">
+                        <InputLabel htmlFor="capacity_children" value="Capacity (Children)" />
+                        <TextInput
+                            id="capacity_children"
+                            type="number"
+                            value={data.capacity_children}
+                            onChange={(e) => setData("capacity_children", e.target.value)}
+                            className="mt-1 block w-full"
+                        />
+                        {errors.capacity_children && (
+                            <p className="text-red-500 text-xs mt-1">
+                                {errors.capacity_children}
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="status" value="Status" />
+                    <select
+                        id="status"
+                        value={data.status}
+                        onChange={(e) => setData("status", e.target.value)}
+                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                        required
+                    >
+                        {roomStatuses.map((status) => (
+                            <option key={status} value={status}>
+                                {status}
+                            </option>
+                        ))}
+                    </select>
+                    {errors.status && (
+                        <p className="text-red-500 text-xs mt-1">
+                            {errors.status}
+                        </p>
+                    )}
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                    <SecondaryButton onClick={onClose}>Cancel</SecondaryButton>
+                    <PrimaryButton className="ms-3" disabled={processing}>
+                        Add Room
+                    </PrimaryButton>
+                </div>
+            </form>
+        </Modal>
+    );
+};
+
+
+const AllRooms = ({ rooms, roomTypes, roomStatuses }) => {
     const [filters, setFilters] = useState({ type: 'All', status: 'All' });
     const [searchTerm, setSearchTerm] = useState('');
+    const [isAddRoomModalOpen, setAddRoomModalOpen] = useState(false);
 
     const handleFilterChange = (filterName, value) => {
         setFilters(prev => ({ ...prev, [filterName]: value }));
     };
 
-    const filteredRooms = mockRooms.filter(room => {
-        const typeMatch = filters.type === 'All' || room.roomType === filters.type;
+    const filteredRooms = rooms.filter(room => {
+        const typeMatch = filters.type === 'All' || room.room_type?.name === filters.type;
         const statusMatch = filters.status === 'All' || room.status === filters.status;
-        const searchMatch = room.id.toLowerCase().includes(searchTerm.toLowerCase());
+        const searchMatch = room.room_number.toLowerCase().includes(searchTerm.toLowerCase());
         return typeMatch && statusMatch && searchMatch;
     });
 
@@ -55,7 +200,9 @@ const AllRooms = () => {
                         <h1 className="text-3xl font-bold text-gray-800">All Rooms</h1>
                         <p className="text-gray-500 mt-1">Manage all rooms in the hotel property.</p>
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm">
+                    <button
+                        onClick={() => setAddRoomModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm">
                         <PlusCircle className="w-4 h-4" />
                         Add New Room
                     </button>
@@ -68,12 +215,14 @@ const AllRooms = () => {
                             <div>
                                 <label className="text-sm font-semibold text-gray-600 mb-1 block">Room Type</label>
                                 <select onChange={(e) => handleFilterChange('type', e.target.value)} className="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    {roomTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                                    <option value="All">All</option>
+                                    {roomTypes.map(type => <option key={type.id} value={type.name}>{type.name}</option>)}
                                 </select>
                             </div>
                              <div>
                                 <label className="text-sm font-semibold text-gray-600 mb-1 block">Room Status</label>
                                 <select onChange={(e) => handleFilterChange('status', e.target.value)} className="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="All">All</option>
                                     {roomStatuses.map(status => <option key={status} value={status}>{status}</option>)}
                                 </select>
                             </div>
@@ -99,30 +248,28 @@ const AllRooms = () => {
                     {filteredRooms.map(room => (
                         <div key={room.id} className="bg-white rounded-2xl shadow-md border border-gray-200/80 overflow-hidden flex flex-col">
                             <div className="relative">
-                                <img src={room.imageUrl} alt={room.roomType} className="h-48 w-full object-cover"/>
+                                <img src={'https://via.placeholder.com/400x250'} alt={room.room_type?.name} className="h-48 w-full object-cover"/>
                                 <span className={`absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-full ${statusStyles[room.status]}`}>
                                     {room.status}
                                 </span>
                             </div>
                             <div className="p-4 flex-grow flex flex-col">
-                                <h3 className="text-xl font-bold text-gray-800">Room {room.id}</h3>
-                                <p className="text-sm text-gray-500">{room.roomType}</p>
+                                <h3 className="text-xl font-bold text-gray-800">Room {room.room_number}</h3>
+                                <p className="text-sm text-gray-500">{room.room_type?.name}</p>
                                 
                                 <div className="mt-4 flex-grow">
                                     <div className="flex items-center justify-between text-sm">
-                                        <span className="font-semibold text-gray-700">Bed Type</span>
-                                        <span className="text-gray-600">{room.bedType}</span>
+                                        <span className="font-semibold text-gray-700">Adults</span>
+                                        <span className="text-gray-600">{room.capacity_adults}</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm mt-2">
-                                        <span className="font-semibold text-gray-700">Amenities</span>
-                                        <div className="flex items-center gap-2">
-                                            {room.amenities.map(amenity => amenityIcons[amenity])}
-                                        </div>
+                                        <span className="font-semibold text-gray-700">Children</span>
+                                        <span className="text-gray-600">{room.capacity_children || 0}</span>
                                     </div>
                                 </div>
                                 
                                 <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-                                    <p className="text-lg font-bold text-blue-600">${room.rate}<span className="text-sm font-normal text-gray-500">/night</span></p>
+                                    <p className="text-lg font-bold text-blue-600">${parseFloat(room.price_per_night).toFixed(2)}<span className="text-sm font-normal text-gray-500">/night</span></p>
                                     <div className="flex items-center gap-2">
                                          <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><Edit className="w-4 h-4"/></button>
                                          <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><ToggleLeft className="w-4 h-4"/></button>
@@ -139,6 +286,12 @@ const AllRooms = () => {
                     </div>
                 )}
             </div>
+            <CreateRoomModal
+                show={isAddRoomModalOpen}
+                onClose={() => setAddRoomModalOpen(false)}
+                roomTypes={roomTypes}
+                roomStatuses={roomStatuses}
+            />
         </AdminLayout>
     );
 };

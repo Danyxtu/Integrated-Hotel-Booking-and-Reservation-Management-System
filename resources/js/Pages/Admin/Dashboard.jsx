@@ -24,13 +24,7 @@ const iconComponents = {
     CheckCircle,
 };
 
-const AdminDashboard = ({
-    stats,
-    recentBookings,
-    pendingActions,
-    customers,
-    rooms,
-}) => {
+const AdminDashboard = ({ stats, recentBookings, pendingActions, rooms }) => {
     const [isCreateBookingModalOpen, setCreateBookingModalOpen] =
         useState(false);
 
@@ -141,7 +135,6 @@ const AdminDashboard = ({
             <CreateBookingModal
                 show={isCreateBookingModalOpen}
                 onClose={() => setCreateBookingModalOpen(false)}
-                customers={customers}
                 rooms={rooms}
             />
         </>

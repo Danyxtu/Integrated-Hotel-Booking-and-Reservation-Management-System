@@ -50,6 +50,8 @@ Route::middleware(['auth','role:admin'])
         Route::get('/rooms/all', [RoomManagementController::class, 'showAllRooms'])->name('rooms.all');
         Route::get('/rooms/room-types', [RoomManagementController::class, 'showAllRoomTypes'])->name('room_types.index');
         Route::get('/rooms/availability', [RoomManagementController::class, 'showRoomAvailable'])->name('rooms.availability');
+        Route::post('/rooms/store', [RoomManagementController::class, 'storeRoom'])->name('rooms.store'); // Added route for storing new rooms
+        Route::post('/room-types/store', [RoomManagementController::class, 'storeRoomType'])->name('room_types.store'); // Added route for storing new room types
 
         // Payments
         Route::get('/payments/all',[PaymentController::class, 'showAllPayments'])->name('payments.all');
@@ -58,17 +60,24 @@ Route::middleware(['auth','role:admin'])
         Route::get('/payments/reports',[PaymentController::class, 'showAllReports'])->name('payments.reports');
 
         // Guests & Users
-        Route::get('/users/guests', [UserController::class, 'showAllGuests'])->name('users.guests');
+        Route::get('/users/customers', [UserController::class, 'showAllCustomers'])->name('users.customers'); // Renamed route
+        Route::get('/users/admins', [UserController::class, 'showAllAdmins'])->name('users.admins'); // New route
+        Route::post('/users/admins/store', [UserController::class, 'storeAdmin'])->name('users.storeAdmin'); // New route
+        Route::delete('/users/{user}', [UserController::class, 'deleteUser'])->name('users.delete'); // New route for deleting user
         Route::get('/users/staffs', [UserController::class, 'showAllStaff'])->name('users.staff');
         Route::get('/users/roles', [UserController::class, 'showAllRoles'])->name('users.roles');
         
         // Settings
         Route::get('/settings/general', [SettingsController::class, 'showGeneralSettings'])->name('settings.general');
+        Route::put('/settings/general', [SettingsController::class, 'updateGeneralSettings'])->name('settings.updateGeneral'); // New route
         Route::get('/settings/pricing-and-rates', [SettingsController::class, 'showPricingAndRates'])->name('settings.pricing');
+        Route::put('/settings/pricing-and-rates', [SettingsController::class, 'updatePricingAndRates'])->name('settings.updatePricingAndRates'); // New route
         Route::get('/settings/email-templates', [SettingsController::class, 'showEmailTemplates'])->name('settings.emails');
+        Route::put('/settings/email-templates', [SettingsController::class, 'updateEmailTemplates'])->name('settings.updateEmailTemplates'); // New route
         Route::get('/settings/integrations', [SettingsController::class, 'showIntegrations'])->name('settings.integrations');
 
-        Route::post('admin/bookings/store', [BookingController::class, 'store'])->name('bookings.store');
+        Route::post('/bookings/store', [BookingController::class, 'store'])->name('bookings.store');
+        Route::put('/bookings/{booking}/update-status', [ReservationController::class, 'updateStatus'])->name('bookings.updateStatus');
 });
 
 
