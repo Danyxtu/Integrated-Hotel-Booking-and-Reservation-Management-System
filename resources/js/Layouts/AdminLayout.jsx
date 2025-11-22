@@ -14,6 +14,7 @@ import {
     LogOut,
 } from "lucide-react";
 import { Link, usePage } from "@inertiajs/react";
+import { Toaster } from "@/components/ui/toaster";
 
 const AdminLayout = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -50,6 +51,7 @@ const AdminLayout = ({ children }) => {
                     path: "admin.reservations.check-outs",
                 },
                 { name: "Pending", path: "admin.reservations.pending" },
+                { name: "Walk-in", path: "admin.bookings.walkin" },
             ],
         },
         {
@@ -291,13 +293,6 @@ const AdminLayout = ({ children }) => {
                 <header className="bg-white border-b shadow-sm">
                     <div className="flex items-center justify-between px-8 py-4">
                         <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => setSidebarOpen(!sidebarOpen)}
-                                className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
-                            >
-                                <Menu className="w-6 h-6" />
-                            </button>
-
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900">
                                     {activeMenuName}
@@ -344,6 +339,7 @@ const AdminLayout = ({ children }) => {
                 <main className="flex-1 overflow-y-auto bg-gray-50 p-8">
                     <div className="max-w-7xl mx-auto">{children}</div>
                 </main>
+            <Toaster />
             </div>
 
             {/* LOGOUT DIALOG */}

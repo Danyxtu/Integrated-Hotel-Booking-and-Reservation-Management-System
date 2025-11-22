@@ -19,6 +19,10 @@ class RoomTypeFactory extends Factory
         return [
             'name' => $this->faker->word(),
             'description' => $this->faker->sentence(),
+            'price' => $this->faker->numberBetween(100, 1000),
+            'capacity_adults' => $this->faker->numberBetween(1, 4),
+            'capacity_children' => $this->faker->numberBetween(0, 2),
+            'amenities' => 'Wi-Fi, TV, Air Conditioning',
         ];
     }
 }

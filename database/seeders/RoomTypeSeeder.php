@@ -17,21 +17,33 @@ class RoomTypeSeeder extends Seeder
                 'name' => 'Standard',
                 'description' => 'A cozy room perfect for solo travelers or couples.',
                 'price' => 150.00,
+                'capacity_adults' => 2,
+                'capacity_children' => 1,
+                'amenities' => 'Wi-Fi, TV, Air Conditioning',
             ],
             [
                 'name' => 'Deluxe',
                 'description' => 'A spacious room with a beautiful view.',
                 'price' => 250.00,
+                'capacity_adults' => 2,
+                'capacity_children' => 2,
+                'amenities' => 'Wi-Fi, TV, Air Conditioning, Mini-bar',
             ],
             [
                 'name' => 'Suite',
                 'description' => 'A luxurious suite with a separate living area.',
                 'price' => 400.00,
+                'capacity_adults' => 2,
+                'capacity_children' => 2,
+                'amenities' => 'Wi-Fi, TV, Air Conditioning, Mini-bar, Jacuzzi',
             ],
             [
                 'name' => 'Family',
                 'description' => 'A large room with multiple beds, ideal for families.',
                 'price' => 350.00,
+                'capacity_adults' => 4,
+                'capacity_children' => 2,
+                'amenities' => 'Wi-Fi, TV, Air Conditioning',
             ]
         ]);
     }

@@ -14,6 +14,7 @@ import {
     Award,
 } from "lucide-react";
 import { Link } from "@inertiajs/react";
+import { usePage } from "@inertiajs/react";
 
 export default function HotelBooking({ laravelVersion }) {
     console.log(laravelVersion);
@@ -21,6 +22,9 @@ export default function HotelBooking({ laravelVersion }) {
     const [checkOut, setCheckOut] = useState("");
     const [guests, setGuests] = useState(2);
     const [isScrolled, setIsScrolled] = useState(false);
+
+    const user = usePage().props.auth.user;
+    console.log(user);
 
     React.useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -89,7 +93,7 @@ export default function HotelBooking({ laravelVersion }) {
                             </div>
                             <div>
                                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                    LuxeStay
+                                    LuxStay
                                 </h1>
                                 <p className="text-xs text-gray-500">
                                     Premium Hospitality
@@ -118,7 +122,17 @@ export default function HotelBooking({ laravelVersion }) {
                             <button className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition transform">
                                 Book Now
                             </button>
-                            <Link href={route("login")}>Login Here</Link>
+
+                            {user ? (
+                                <Link
+                                    href={route("customer.dashboard")}
+                                    className="text-gray-700 hover:text-blue-600 transition font-medium"
+                                >
+                                    Dashboard
+                                </Link>
+                            ) : (
+                                <Link href={route("login")}>Login Here</Link>
+                            )}
                         </nav>
                     </div>
                 </div>

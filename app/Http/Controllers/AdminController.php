@@ -9,6 +9,7 @@ use App\Models\Room;
 use App\Models\Payment;
 use App\Models\Customer;
 use App\Enums\PaymentStatus as EnumsPaymentStatus;
+use App\Models\RoomType;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -61,7 +62,7 @@ class AdminController extends Controller
             ],
             [
                 'name' => 'Monthly Revenue',
-                'value' => '$' . round($monthlyRevenue / 1000) . 'K',
+                'value' => '$' . round($monthlyRevenue / 1000) . 'K', // todo later front end should handle this kind of operation
                 'trend' => '+23%', // a placeholder for now
                 'icon' => 'DollarSign',
                 'color' => 'green',
@@ -124,6 +125,16 @@ class AdminController extends Controller
             'pendingActions' => $pendingActions,
             'customers' => $customers,
             'rooms' => $rooms,
+        ]);
+    }
+
+    public function walkin(Request $request)
+    {
+
+        $rooms = Room::with('roomType')->get();
+        
+        return Inertia::render('Admin/Reservations/Walkin',[
+            'roomTypes' => RoomType::all(),
         ]);
     }
 

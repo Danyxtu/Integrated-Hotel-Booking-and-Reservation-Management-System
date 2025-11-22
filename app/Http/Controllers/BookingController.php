@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 use App\Models\Customer;
+use App\Models\Room;
 
 class BookingController extends Controller
 {
@@ -14,6 +15,30 @@ class BookingController extends Controller
     public function index()
     {
         //
+    }
+
+    public function checkAvailability(Request $request)
+    {
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = $validated['start_date'];
+        $endDate = $validated['end_date'];
+
+        // Find rooms that are booked in the given date range
+        $bookedRoomIds = Booking::whereIn('status', ['Confirmed', 'Checked In'])
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->where('check_in_date', '<', $endDate)
+                      ->where('check_out_date', '>', $startDate);
+            })
+            ->pluck('room_id');
+
+        // Get all rooms that are not in the booked list
+        $availableRooms = Room::whereNotIn('id', $bookedRoomIds)->with('roomType')->get();
+
+        return response()->json($availableRooms);
     }
 
     /**
@@ -67,6 +92,40 @@ class BookingController extends Controller
         ]);
 
         return redirect()->route('admin.dashboard')->with('success', 'Booking created successfully.');
+    }
+
+    public function walkIn(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'room_type' => 'required|exists:room_types,id',
+            'check_in_date' => 'required|date',
+            'check_out_date' => 'required|date|after_or_equal:check_in_date',
+        ]);
+
+        $startDate = $validated['check_in_date'];
+        $endDate = $validated['check_out_date'];
+
+        // Find rooms that are booked in the given date range
+        $bookedRoomIds = Booking::whereIn('status', ['Confirmed', 'Checked In'])
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->where('check_in_date', '<', $endDate)
+                    ->where('check_out_date', '>', $startDate);
+            })
+            ->pluck('room_id');
+
+        // Get all rooms that are not in the booked list and match the room type
+        $availableRooms = Room::whereNotIn('id', $bookedRoomIds)
+            ->where('room_type_id', $validated['room_type'])
+            ->get();
+
+        if ($availableRooms->isEmpty()) {
+            return response()->json(['message' => 'No available rooms for the selected criteria.'], 404);
+        }
+
+        return response()->json($availableRooms);
     }
 
 

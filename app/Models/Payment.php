@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Booking; // Import the Booking model
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\PaymentStatus;
@@ -23,4 +24,12 @@ class Payment extends Model
         'status' => PaymentStatus::class,
         'payment_date' => 'datetime',
     ];
+
+    /**
+     * Get the booking that owns the payment.
+     */
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class);
+    }
 }

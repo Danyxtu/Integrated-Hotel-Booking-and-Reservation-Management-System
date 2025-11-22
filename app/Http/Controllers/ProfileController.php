@@ -24,6 +24,14 @@ class ProfileController extends Controller
         ]);
     }
 
+    public function customerSettings(Request $request): Response
+    {
+        return Inertia::render('Customer/Settings', [
+            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'status' => session('status'),
+        ]);
+    }
+
     /**
      * Update the user's profile information.
      */

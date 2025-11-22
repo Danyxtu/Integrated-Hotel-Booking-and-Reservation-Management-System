@@ -5,15 +5,17 @@ namespace App\Enums;
 use BenSampo\Enum\Enum;
 
 /**
- * @method static static OptionOne()
- * @method static static OptionTwo()
- * @method static static OptionThree()
+ * @method static static Pending()
+ * @method static static Completed()
+ * @method static static Cancelled()
+ * @method static static Refunded()
  */
 final class PaymentStatus extends Enum
 {
-    const Pending   = 0;
-    const Completed = 1;
-    const Cancelled = 2;
+    const Pending   = 'Pending';
+    const Completed = 'Completed';
+    const Cancelled = 'Cancelled';
+    const Refunded  = 'Refunded';
 
     public static function getDescription($value): string
     {
@@ -21,6 +23,7 @@ final class PaymentStatus extends Enum
             self::Pending => 'Pending',
             self::Completed => 'Completed',
             self::Cancelled => 'Cancelled',
+            self::Refunded => 'Refunded',
             default => parent::getDescription($value),
         };
     }

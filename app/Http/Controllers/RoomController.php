@@ -12,7 +12,12 @@ class RoomController extends Controller
      */
     public function index()
     {
-        //
+        $rooms = Room::with('roomType')->get();
+        $roomTypes = \App\Models\RoomType::all();
+        return inertia('Customer/Rooms', [
+            'rooms' => $rooms,
+            'roomTypes' => $roomTypes,
+        ]);
     }
 
     /**

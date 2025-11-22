@@ -1,17 +1,31 @@
 import React, { useState } from "react";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { Search, DollarSign, CreditCard, Banknote, Clock, CheckCircle2, XCircle, ShieldCheck, Mail, FileText } from "lucide-react";
+import { Search, DollarSign, CreditCard, Banknote, Clock, CheckCircle2, XCircle, ShieldCheck, Mail, FileText, Eye } from "lucide-react"; // Added Eye icon
+import { router } from "@inertiajs/react";
+import { useToast } from "@/hooks/use-toast";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // Assuming Input component exists for refund reason
+import { Label } from "@/components/ui/label"; // Assuming Label component exists
 
-// Mock data for payments (could be fetched from a single source)
-const mockAllPayments = [
-    { id: "PAY001", bookingId: "BK001", guestName: "John Doe", amount: 1250.00, method: "Credit Card", date: "2025-11-19", status: "Completed" },
-    { id: "PAY002", bookingId: "BK003", guestName: "Peter Jones", amount: 980.00, method: "Bank Transfer", date: "2025-11-18", status: "Pending" },
-    { id: "PAY003", bookingId: "BK005", guestName: "David Williams", amount: 2500.00, method: "Credit Card", date: "2025-11-17", status: "Completed" },
-    { id: "PAY004", bookingId: "BK006", guestName: "Emily Brown", amount: 500.00, method: "Credit Card", date: "2025-11-16", status: "Refunded" },
-    { id: "PAY005", bookingId: "BK007", guestName: "Michael Davis", amount: 1100.00, method: "Cash", date: "2025-11-15", status: "Completed" },
-    { id: "PAY006", bookingId: "BK002", guestName: "Jane Smith", amount: 450.00, method: "Credit Card", date: "2025-11-20", status: "Completed" },
-    { id: "PAY007", bookingId: "BK008", guestName: "Sarah Miller", amount: 1200.00, method: "Bank Transfer", date: "2025-11-20", status: "Pending" },
-];
+// These are removed as per the plan
+// import {
+//     Select,
+//     SelectContent,
+//     SelectItem,
+//     SelectTrigger,
+//     SelectValue,
+// } from "@/components/ui/select";
+
 
 const statusStyles = {
     Pending: {
@@ -19,6 +33,24 @@ const statusStyles = {
         bgColor: "bg-yellow-100",
         textColor: "text-yellow-800",
         label: "Pending",
+    },
+    Completed: {
+        icon: CheckCircle2,
+        bgColor: "bg-green-100",
+        textColor: "text-green-800",
+        label: "Completed",
+    },
+    Cancelled: {
+        icon: XCircle,
+        bgColor: "bg-red-100",
+        textColor: "text-red-800",
+        label: "Cancelled",
+    },
+    Refunded: {
+        icon: DollarSign,
+        bgColor: "bg-blue-100",
+        textColor: "text-blue-800",
+        label: "Refunded",
     },
 };
 
@@ -28,25 +60,319 @@ const methodIcons = {
     Cash: <DollarSign className="w-4 h-4" />,
 };
 
-const PendingPayments = () => {
-    const [pendingPayments, setPendingPayments] = useState(mockAllPayments.filter(p => p.status === 'Pending'));
+// --- Confirmation Dialogs (adapted to be called from PaymentDetailsDialog) ---
+const ConfirmPaymentDialog = ({ payment, open, onOpenChange, onConfirm, isProcessing }) => {
+    if (!payment) return null;
+    return (
+        <AlertDialog open={open} onOpenChange={onOpenChange}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Payment Completion?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to mark payment #{payment.id} for booking #{payment.booking?.booking_number} as Completed? This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onConfirm(payment.id, 'Completed')} disabled={isProcessing}>Confirm</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+};
+
+const CancelPaymentDialog = ({ payment, open, onOpenChange, onConfirm, isProcessing }) => {
+    if (!payment) return null;
+    return (
+        <AlertDialog open={open} onOpenChange={onOpenChange}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Payment Cancellation?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to mark payment #{payment.id} for booking #{payment.booking?.booking_number} as Cancelled? This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onConfirm(payment.id, 'Cancelled')} disabled={isProcessing}>Confirm</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+};
+
+const RefundPaymentDialog = ({ payment, open, onOpenChange, onConfirm, isProcessing, refundReason }) => {
+    if (!payment) return null;
+    return (
+        <AlertDialog open={open} onOpenChange={onOpenChange}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Payment Refund?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to refund payment #{payment.id} for booking #{payment.booking?.booking_number}?
+                        <p className="mt-2 text-sm text-gray-700">Reason: <span className="font-semibold">{refundReason}</span></p>
+                        This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onConfirm(payment.id, refundReason)} disabled={isProcessing}>Confirm Refund</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+};
+
+// --- New PaymentDetailsDialog component ---
+const PaymentDetailsDialog = ({
+    payment,
+    open,
+    onOpenChange,
+    onConfirmStatusUpdate, // Callback for Confirm/Cancel
+    onRefund, // Callback for Refund
+    isProcessing,
+    // Props to control nested confirmation dialogs
+    isConfirmDialogOpen, setIsConfirmDialogOpen,
+    isCancelDialogOpen, setIsCancelDialogOpen,
+    isRefundDialogOpen, setIsRefundDialogOpen,
+    refundReason, setRefundReason,
+}) => {
+    const [isRefundReasonVisible, setIsRefundReasonVisible] = useState(false);
+
+    const handleConfirmClick = () => {
+        setIsConfirmDialogOpen(true);
+    };
+
+    const handleCancelClick = () => {
+        setIsCancelDialogOpen(true);
+    };
+
+    const handleRefundAction = () => {
+        if (!isRefundReasonVisible) {
+            setIsRefundReasonVisible(true);
+        } else {
+            // Trigger refund confirmation dialog
+            setIsRefundDialogOpen(true);
+        }
+    };
+
+    if (!payment) return null;
+
+    return (
+        <AlertDialog open={open} onOpenChange={onOpenChange}>
+            <AlertDialogContent className="sm:max-w-[800px]">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Payment Details #{payment.id}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Review details and take action for payment #{payment.id}.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <p className="text-sm font-semibold">Booking Number:</p>
+                            <p className="text-gray-700">{payment.booking?.booking_number}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">Guest Name:</p>
+                            <p className="text-gray-700">{payment.booking?.customer?.first_name} {payment.booking?.customer?.last_name}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">Amount:</p>
+                            <p className="text-gray-700">${parseFloat(payment.amount).toFixed(2)}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">Payment Method:</p>
+                            <p className="text-gray-700">{payment.payment_method}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">Payment Date:</p>
+                            <p className="text-gray-700">{new Date(payment.payment_date).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold">Status:</p>
+                            <p className="text-gray-700">{payment.status}</p>
+                        </div>
+                         {payment.status === 'Refunded' && payment.refund_reason && (
+                            <div className="col-span-2">
+                                <p className="text-sm font-semibold">Refund Reason:</p>
+                                <p className="text-gray-700">{payment.refund_reason}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {isRefundReasonVisible && (
+                        <div className="space-y-2 mt-4">
+                            <Label htmlFor="refundReason">Reason for Refund</Label>
+                            <Input
+                                id="refundReason"
+                                value={refundReason}
+                                onChange={(e) => setRefundReason(e.target.value)}
+                                placeholder="e.g., Customer requested, overcharged"
+                                disabled={isProcessing}
+                            />
+                            {refundReason.length === 0 && <p className="text-red-500 text-sm">Reason is required to proceed with refund.</p>}
+                        </div>
+                    )}
+                </div>
+
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => onOpenChange(false)} disabled={isProcessing}>Close</AlertDialogCancel>
+                    {payment.status === 'Pending' && (
+                        <>
+                            <Button
+                                variant="destructive"
+                                onClick={handleCancelClick}
+                                disabled={isProcessing}
+                            >
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Cancel Payment
+                            </Button>
+                            <Button
+                                variant="warning" // Assuming a 'warning' variant exists for yellow color
+                                onClick={handleRefundAction}
+                                disabled={isProcessing || (isRefundReasonVisible && refundReason.length === 0)}
+                            >
+                                <DollarSign className="w-4 h-4 mr-1" />
+                                {isRefundReasonVisible ? 'Confirm Refund' : 'Refund Payment'}
+                            </Button>
+                            <Button
+                                variant="success"
+                                onClick={handleConfirmClick}
+                                disabled={isProcessing}
+                            >
+                                <ShieldCheck className="w-4 h-4 mr-1" />
+                                Confirm Payment
+                            </Button>
+                        </>
+                    )}
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+};
+
+
+const PendingPayments = ({ payments, statuses }) => {
+    const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedPayment, setSelectedPayment] = useState(null);
+    const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false); // New state for details dialog
+    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+    const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+    const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false); // New state for refund dialog
+    const [refundReason, setRefundReason] = useState(''); // New state for refund reason
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleMarkAsCompleted = (paymentId) => {
-        setPendingPayments(prev => prev.filter(p => p.id !== paymentId));
-        console.log(`Payment ${paymentId} marked as completed.`);
-        // In a real app, send API request to update status
+    const executeStatusUpdate = (paymentId, newStatus) => {
+        setIsProcessing(true);
+        router.patch(route('admin.payments.updateStatus', paymentId), { status: newStatus }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setIsConfirmDialogOpen(false);
+                setIsCancelDialogOpen(false);
+                setIsDetailsDialogOpen(false); // Close details dialog after action
+                setSelectedPayment(null);
+                toast({
+                    title: "Success",
+                    description: `Payment #${paymentId} status updated to ${newStatus}.`,
+                    variant: "success",
+                });
+            },
+            onError: (error) => {
+                console.error("Payment status update failed:", error); // Log the full error object
+                let errorMessage = "Failed to update payment status.";
+                if (error && typeof error === 'object') {
+                    if (error.status) {
+                        errorMessage += ` Status Code: ${error.status}.`;
+                    }
+                    if (error.message) {
+                        errorMessage = error.message;
+                    } else if (Object.keys(error).length > 0) {
+                        const firstErrorKey = Object.keys(error)[0];
+                        errorMessage = error[firstErrorKey];
+                    }
+                }
+                toast({
+                    title: "Error",
+                    description: errorMessage,
+                    variant: "destructive",
+                });
+            },
+            onFinish: () => {
+                setIsProcessing(false);
+            }
+        });
     };
 
-    const handleCancel = (paymentId) => {
-        setPendingPayments(prev => prev.filter(p => p.id !== paymentId));
-        console.log(`Payment ${paymentId} cancelled.`);
-         // In a real app, send API request to update status
+    const executeRefund = (paymentId, reason) => {
+        setIsProcessing(true);
+        router.patch(route('admin.payments.refund', paymentId), { reason: reason }, { // New route, using PATCH as it's an update to the payment record
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setIsRefundDialogOpen(false);
+                setIsDetailsDialogOpen(false);
+                setSelectedPayment(null);
+                setRefundReason('');
+                toast({
+                    title: "Success",
+                    description: `Payment #${paymentId} has been refunded.`,
+                    variant: "success",
+                });
+            },
+            onError: (error) => {
+                console.error("Payment refund failed:", error);
+                let errorMessage = "Failed to refund payment.";
+                if (error && typeof error === 'object') {
+                    if (error.status) {
+                        errorMessage += ` Status Code: ${error.status}.`;
+                    }
+                    if (error.message) {
+                        errorMessage = error.message;
+                    } else if (Object.keys(error).length > 0) {
+                        const firstErrorKey = Object.keys(error)[0];
+                        errorMessage = error[firstErrorKey];
+                    }
+                }
+                toast({
+                    title: "Error",
+                    description: errorMessage,
+                    variant: "destructive",
+                });
+            },
+            onFinish: () => {
+                setIsProcessing(false);
+            }
+        });
     };
 
-    const filteredPayments = pendingPayments.filter(payment =>
-        payment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.guestName.toLowerCase().includes(searchTerm.toLowerCase())
+    const handleViewDetailsClick = (payment) => {
+        setSelectedPayment(payment);
+        setIsDetailsDialogOpen(true);
+    };
+
+    // Note: handleConfirmClick and handleCancelClick are now internal to PaymentDetailsDialog
+
+    const getStatusChip = (status) => {
+        const style = statusStyles[status] || {};
+        const Icon = style.icon;
+        return (
+            <span
+                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${style.bgColor || 'bg-gray-100'} ${style.textColor || 'text-gray-800'}`}
+            >
+                {Icon && <Icon className="w-3.5 h-3.5" />}
+                {style.label || status}
+            </span>
+        );
+    };
+
+    const filteredPayments = payments.filter(payment =>
+        payment.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.booking?.booking_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.booking?.customer?.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.booking?.customer?.last_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -76,10 +402,12 @@ const PendingPayments = () => {
                         <thead className="bg-gray-50/80 text-xs text-gray-700 uppercase tracking-wider">
                             <tr>
                                 <th scope="col" className="px-6 py-4">Payment ID</th>
+                                <th scope="col" className="px-6 py-4">Booking ID</th>
                                 <th scope="col" className="px-6 py-4">Guest Name</th>
                                 <th scope="col" className="px-6 py-4 text-right">Amount</th>
                                 <th scope="col" className="px-6 py-4">Method</th>
                                 <th scope="col" className="px-6 py-4">Date</th>
+                                <th scope="col" className="px-6 py-4 text-center">Status</th>
                                 <th scope="col" className="px-6 py-4 text-center">Actions</th>
                             </tr>
                         </thead>
@@ -88,38 +416,38 @@ const PendingPayments = () => {
                                 filteredPayments.map((payment) => (
                                     <tr key={payment.id} className="hover:bg-gray-50 transition">
                                         <td className="px-6 py-4 font-mono text-blue-600">{payment.id}</td>
-                                        <td className="px-6 py-4 font-semibold text-gray-800">{payment.guestName}</td>
-                                        <td className="px-6 py-4 font-mono text-right">${payment.amount.toFixed(2)}</td>
-                                        <td className="px-6 py-4 flex items-center gap-2">
-                                            {methodIcons[payment.method]}
-                                            {payment.method}
+                                        <td className="px-6 py-4">{payment.booking?.booking_number}</td>
+                                        <td className="px-6 py-4 font-semibold text-gray-800">
+                                            {payment.booking?.customer?.first_name}{" "}
+                                            {payment.booking?.customer?.last_name}
                                         </td>
-                                        <td className="px-6 py-4">{payment.date}</td>
+                                        <td className="px-6 py-4 font-mono text-right">${parseFloat(payment.amount).toFixed(2)}</td>
+                                        <td className="px-6 py-4 flex items-center gap-2">
+                                            {methodIcons[payment.payment_method]}
+                                            {payment.payment_method}
+                                        </td>
+                                        <td className="px-6 py-4">{new Date(payment.payment_date).toLocaleDateString()}</td>
+                                        <td className="px-6 py-4 text-center">
+                                            {/* Always pending status on this page */}
+                                            {getStatusChip(payment.status)}
+                                        </td>
                                         <td className="px-6 py-4 text-center">
                                             <div className="flex items-center justify-center gap-2">
-                                                <button
-                                                    onClick={() => handleMarkAsCompleted(payment.id)}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-green-500 rounded-md hover:bg-green-600 transition"
-                                                    title="Mark as Completed"
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleViewDetailsClick(payment)}
+                                                    title="View Payment Details"
                                                 >
-                                                    <ShieldCheck className="w-4 h-4"/>
-                                                    Confirm
-                                                </button>
-                                                <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition" title="Send Reminder">
-                                                    <Mail className="w-4 h-4"/>
-                                                </button>
-                                                 <button 
-                                                    onClick={() => handleCancel(payment.id)}
-                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-md transition" title="Cancel Payment">
-                                                    <XCircle className="w-4 h-4"/>
-                                                </button>
+                                                    <Eye className="w-4 h-4 mr-1"/>
+                                                    View Details
+                                                </Button>
                                             </div>
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-10 text-center text-gray-500">
+                                    <td colSpan="8" className="px-6 py-10 text-center text-gray-500">
                                         <div className="flex flex-col items-center justify-center">
                                             <FileText className="w-10 h-10 text-gray-400 mb-2"/>
                                             <p className="font-semibold">No pending payments found.</p>
@@ -131,6 +459,55 @@ const PendingPayments = () => {
                     </table>
                 </div>
             </div>
+            {/* The new PaymentDetailsDialog will be rendered here */}
+            {selectedPayment && (
+                <PaymentDetailsDialog
+                    payment={selectedPayment}
+                    open={isDetailsDialogOpen}
+                    onOpenChange={setIsDetailsDialogOpen}
+                    onConfirmStatusUpdate={executeStatusUpdate}
+                    onRefund={executeRefund}
+                    isProcessing={isProcessing}
+                    // Pass existing dialog open/close states and reason handlers
+                    isConfirmDialogOpen={isConfirmDialogOpen}
+                    setIsConfirmDialogOpen={setIsConfirmDialogOpen}
+                    isCancelDialogOpen={isCancelDialogOpen}
+                    setIsCancelDialogOpen={setIsCancelDialogOpen}
+                    isRefundDialogOpen={isRefundDialogOpen}
+                    setIsRefundDialogOpen={setIsRefundDialogOpen}
+                    refundReason={refundReason}
+                    setRefundReason={setRefundReason}
+                />
+            )}
+            {/* Keep confirmation dialogs but they will be triggered by PaymentDetailsDialog */}
+            {selectedPayment && (
+                <ConfirmPaymentDialog
+                    payment={selectedPayment}
+                    open={isConfirmDialogOpen}
+                    onOpenChange={setIsConfirmDialogOpen}
+                    onConfirm={executeStatusUpdate}
+                    isProcessing={isProcessing}
+                />
+            )}
+            {selectedPayment && (
+                <CancelPaymentDialog
+                    payment={selectedPayment}
+                    open={isCancelDialogOpen}
+                    onOpenChange={setIsCancelDialogOpen}
+                    onConfirm={executeStatusUpdate}
+                    isProcessing={isProcessing}
+                />
+            )}
+             {selectedPayment && (
+                <RefundPaymentDialog
+                    payment={selectedPayment}
+                    open={isRefundDialogOpen}
+                    onOpenChange={setIsRefundDialogOpen}
+                    onConfirm={executeRefund}
+                    isProcessing={isProcessing}
+                    refundReason={refundReason}
+                />
+            )}
         </AdminLayout>
     );
 };

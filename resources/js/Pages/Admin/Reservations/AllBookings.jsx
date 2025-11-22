@@ -15,6 +15,9 @@ import {
     Trash2,
 } from "lucide-react";
 import CreateBookingModal from "@/Components/CreateBookingModal";
+import { useInstantTransition, useScroll } from "framer-motion";
+import BookingDetails from "./BookingDetails";
+
 const statusFilters = [
     "All",
     "Pending",
@@ -70,6 +73,8 @@ const statusStyles = {
     },
 };
 
+// const handleModal = () = {} // todo
+
 const AllBookings = ({ bookings, rooms }) => {
     const [activeFilter, setActiveFilter] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
@@ -77,6 +82,8 @@ const AllBookings = ({ bookings, rooms }) => {
     const [dateFilter, setDateFilter] = useState("");
     const [isCreateBookingModalOpen, setCreateBookingModalOpen] =
         useState(false);
+    const [selectedBooking, setSelectedBooking] = useState(null);
+    console.log(bookings);
 
     // Map status to a proper label
     const mappedBookings = bookings.map((b) => ({
@@ -195,7 +202,7 @@ const AllBookings = ({ bookings, rooms }) => {
                             <select
                                 value={sortOrder}
                                 onChange={(e) => setSortOrder(e.target.value)}
-                                className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                className="px-3 py-2 border pr-7 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             >
                                 <option value="newest">Newest</option>
                                 <option value="oldest">Oldest</option>
@@ -262,14 +269,11 @@ const AllBookings = ({ bookings, rooms }) => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex justify-center items-center gap-2">
-                                                <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition">
+                                                <button
+                                                    onClick={() => setSelectedBooking(booking)}
+                                                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"
+                                                >
                                                     <Eye className="w-4 h-4" />
-                                                </button>
-                                                <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition">
-                                                    <FilePen className="w-4 h-4" />
-                                                </button>
-                                                <button className="p-2 text-red-500 hover:bg-red-50 rounded-md transition">
-                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </td>
@@ -280,11 +284,15 @@ const AllBookings = ({ bookings, rooms }) => {
                     </div>
                 </div>
             </AdminLayout>
-
             <CreateBookingModal
                 show={isCreateBookingModalOpen}
                 onClose={() => setCreateBookingModalOpen(false)}
                 rooms={rooms} // Pass rooms prop here
+            />
+            <BookingDetails
+                booking={selectedBooking}
+                show={!!selectedBooking}
+                onClose={() => setSelectedBooking(null)}
             />
         </>
     );

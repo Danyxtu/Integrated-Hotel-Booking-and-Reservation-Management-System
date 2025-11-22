@@ -33,6 +33,7 @@ const AdminDashboard = ({ stats, recentBookings, pendingActions, rooms }) => {
         icon: iconComponents[stat.icon],
     }));
 
+    console.log(stats);
     return (
         <>
             <div className="space-y-8">

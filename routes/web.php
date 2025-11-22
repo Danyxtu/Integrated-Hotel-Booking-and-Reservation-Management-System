@@ -11,8 +11,9 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\RoomController;
 
-Route::get('/', function () {
+Route::get('/',function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
@@ -21,9 +22,14 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Public Booking and Room Search
+Route::get('/search-rooms', [BookingController::class, 'search'])->name('rooms.search');
+Route::post('/book-room', [BookingController::class, 'storePublic'])->name('bookings.public.store');
+
+
+// Route::get('/dashboard', function () {
+//     return Inertia::render('Dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
 
 
 
@@ -42,6 +48,7 @@ Route::middleware(['auth','role:admin'])
 
         // Reservations
         Route::get('/reservations/all-bookings', [ReservationController::class, 'showAllBookings'])->name('reservations.all-bookings');
+        Route::get('/reservations/all-booklings/{booking}',[ReservationController::class, 'show'])->name('reservations.show-booking');
         Route::get('/reservations/check-ins', [ReservationController::class, 'showCheckInsToday'])->name('reservations.check-ins');
         Route::get('/reservations/check-outs', [ReservationController::class, 'showCheckoutsToday'])->name('reservations.check-outs');
         Route::get('/reservations/pendings', [ReservationController::class, 'showPending'])->name('reservations.pending');
@@ -52,12 +59,16 @@ Route::middleware(['auth','role:admin'])
         Route::get('/rooms/availability', [RoomManagementController::class, 'showRoomAvailable'])->name('rooms.availability');
         Route::post('/rooms/store', [RoomManagementController::class, 'storeRoom'])->name('rooms.store'); // Added route for storing new rooms
         Route::post('/room-types/store', [RoomManagementController::class, 'storeRoomType'])->name('room_types.store'); // Added route for storing new room types
+        Route::put('/room-types/{roomType}', [RoomManagementController::class, 'updateRoomType'])->name('room_types.update');
+        Route::delete('/room-types/{roomType}', [RoomManagementController::class, 'destroyRoomType'])->name('room_types.destroy');
 
         // Payments
         Route::get('/payments/all',[PaymentController::class, 'showAllPayments'])->name('payments.all');
         Route::get('/payments/pending',[PaymentController::class, 'showAllPendingPayments'])->name('payments.pending');
         Route::get('/payments/refunds',[PaymentController::class, 'showAllRefunds'])->name('payments.refunds');
         Route::get('/payments/reports',[PaymentController::class, 'showAllReports'])->name('payments.reports');
+        Route::patch('/payments/{payment}/update-status', [PaymentController::class, 'updateStatus'])->name('payments.updateStatus');
+        Route::patch('/payments/{payment}/refund', [PaymentController::class, 'refundPayment'])->name('payments.refund');
 
         // Guests & Users
         Route::get('/users/customers', [UserController::class, 'showAllCustomers'])->name('users.customers'); // Renamed route
@@ -77,9 +88,27 @@ Route::middleware(['auth','role:admin'])
         Route::get('/settings/integrations', [SettingsController::class, 'showIntegrations'])->name('settings.integrations');
 
         Route::post('/bookings/store', [BookingController::class, 'store'])->name('bookings.store');
+        Route::get('/bookings/walk-in', [AdminController::class, 'walkin'])->name('bookings.walkin');
+        Route::post('/bookings/walk-in', [BookingController::class, 'walkIn'])->name('bookings.walkin.check');
         Route::put('/bookings/{booking}/update-status', [ReservationController::class, 'updateStatus'])->name('bookings.updateStatus');
 });
 
 
+
+
+Route::middleware(['auth','role:user'])
+    ->prefix('customer')
+    ->name('customer.')
+    ->group(function (){
+        Route::get('/dashboard', function () {
+            return Inertia::render('Customer/Dashboard');
+        })->name('dashboard');
+        Route::get('/reservations', function () {
+            return Inertia::render('Customer/Reservations');
+        })->name('reservations');
+        Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
+        Route::post('/rooms/check-availability', [BookingController::class, 'checkAvailability'])->name('rooms.checkAvailability');
+        Route::get('/settings', [ProfileController::class, 'customerSettings'])->name('settings');
+    });
 
 require __DIR__.'/auth.php';

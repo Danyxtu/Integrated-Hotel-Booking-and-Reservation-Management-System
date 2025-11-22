@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Enums\RoomStatus;
 use App\Models\Booking;
 use App\Models\Room; // Import the Room model
 use Carbon\Carbon; // Import Carbon for date manipulation
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ReservationController extends Controller
 {
@@ -95,7 +96,23 @@ class ReservationController extends Controller
             'status' => 'required|in:Pending,Confirmed,Cancelled,Checked In,Checked Out,No Show,Expired',
         ]);
 
-        $booking->update(['status' => $validated['status']]);
+        $booking->load('room');
+        $newStatus = $validated['status'];
+
+        if ($booking->room) {
+            switch ($newStatus) {
+                case 'Checked In':
+                    $booking->room->status = RoomStatus::Occupied;
+                    $booking->room->save();
+                    break;
+                case 'Checked Out':
+                    $booking->room->status = RoomStatus::Available;
+                    $booking->room->save();
+                    break;
+            }
+        }
+
+        $booking->update(['status' => $newStatus]);
 
         return back()->with('success', 'Booking status updated successfully.');
     }
@@ -119,9 +136,9 @@ class ReservationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Booking $booking)
     {
-        //
+        // Todo
     }
 
     /**

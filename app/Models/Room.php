@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RoomStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,10 +14,11 @@ class Room extends Model
     protected $fillable = [
         'room_number',
         'room_type_id',
-        'price_per_night',
-        'capacity_adults',
-        'capacity_children',
         'status',
+    ];
+
+    protected $casts = [
+        'status' => RoomStatus::class,
     ];
 
     public function roomType(){
