@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Calendar,
     Users,
@@ -33,6 +33,12 @@ export default function Welcome({ rooms, searchParams }) {
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
 
+    // State for validation errors
+    const [errors, setErrors] = useState({});
+
+    // Ref for the search section to scroll to
+    const searchSectionRef = useRef(null);
+
     const standardRoom = rooms && rooms.length > 0 ? rooms[0] : null;
     const signatureRooms = rooms && rooms.length > 1 ? rooms.slice(1, 4) : [];
 
@@ -42,7 +48,36 @@ export default function Welcome({ rooms, searchParams }) {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    const handleSearch = () => setShowBookingModal(true);
+    // Unified handler for all "Book Now" and "Search" buttons
+    const handleBookingRequest = () => {
+        const newErrors = {};
+
+        // Validate dates
+        if (!checkIn) {
+            newErrors.checkIn = "Please select a check-in date";
+        }
+        if (!checkOut) {
+            newErrors.checkOut = "Please select a check-out date";
+        }
+
+        // If there are errors
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+
+            // Scroll to the search section so user can see the error and input dates
+            if (searchSectionRef.current) {
+                searchSectionRef.current.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                });
+            }
+            return;
+        }
+
+        // Clear errors and proceed if valid
+        setErrors({});
+        setShowBookingModal(true);
+    };
 
     const features = [
         {
@@ -113,9 +148,6 @@ export default function Welcome({ rooms, searchParams }) {
                         >
                             Contact
                         </a>
-                        <button className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition transform">
-                            Book Now
-                        </button>
                         {user ? (
                             <Link
                                 href={route("customer.dashboard")}
@@ -150,8 +182,11 @@ export default function Welcome({ rooms, searchParams }) {
                             heart of paradise. Your perfect getaway starts here.
                         </p>
 
-                        {/* Search Box */}
-                        <div className="bg-white rounded-2xl shadow-2xl p-6 space-y-4 border border-gray-100">
+                        {/* Search Box with Ref */}
+                        <div
+                            ref={searchSectionRef}
+                            className="bg-white rounded-2xl shadow-2xl p-6 space-y-4 border border-gray-100"
+                        >
                             <div className="grid md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -161,11 +196,25 @@ export default function Welcome({ rooms, searchParams }) {
                                     <input
                                         type="date"
                                         value={checkIn}
-                                        onChange={(e) =>
-                                            setCheckIn(e.target.value)
-                                        }
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
+                                        onChange={(e) => {
+                                            setCheckIn(e.target.value);
+                                            if (errors.checkIn)
+                                                setErrors({
+                                                    ...errors,
+                                                    checkIn: null,
+                                                });
+                                        }}
+                                        className={`w-full px-4 py-3 rounded-xl border ${
+                                            errors.checkIn
+                                                ? "border-red-500"
+                                                : "border-gray-200"
+                                        } focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none`}
                                     />
+                                    {errors.checkIn && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                            {errors.checkIn}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -175,11 +224,25 @@ export default function Welcome({ rooms, searchParams }) {
                                     <input
                                         type="date"
                                         value={checkOut}
-                                        onChange={(e) =>
-                                            setCheckOut(e.target.value)
-                                        }
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
+                                        onChange={(e) => {
+                                            setCheckOut(e.target.value);
+                                            if (errors.checkOut)
+                                                setErrors({
+                                                    ...errors,
+                                                    checkOut: null,
+                                                });
+                                        }}
+                                        className={`w-full px-4 py-3 rounded-xl border ${
+                                            errors.checkOut
+                                                ? "border-red-500"
+                                                : "border-gray-200"
+                                        } focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none`}
                                     />
+                                    {errors.checkOut && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                            {errors.checkOut}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <div className="grid md:grid-cols-2 gap-4">
@@ -227,7 +290,7 @@ export default function Welcome({ rooms, searchParams }) {
                                 </div>
                             </div>
                             <button
-                                onClick={handleSearch}
+                                onClick={handleBookingRequest}
                                 className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl hover:scale-105 transition transform flex items-center justify-center gap-2"
                             >
                                 <Search className="w-5 h-5" />
@@ -358,7 +421,10 @@ export default function Welcome({ rooms, searchParams }) {
                                                 </span>
                                             </p>
                                         </div>
-                                        <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition transform">
+                                        <button
+                                            onClick={handleBookingRequest}
+                                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition transform"
+                                        >
                                             Book Now
                                         </button>
                                     </div>

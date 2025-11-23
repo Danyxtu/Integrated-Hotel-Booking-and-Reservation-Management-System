@@ -26,15 +26,15 @@ class RoomTypeSeeder extends Seeder
                 'description' => 'A spacious room with a beautiful view.',
                 'price' => 250.00,
                 'capacity_adults' => 2,
-                'capacity_children' => 2,
+                'capacity_children' => 3,
                 'amenities' => 'Wi-Fi, TV, Air Conditioning, Mini-bar',
             ],
             [
                 'name' => 'Suite',
                 'description' => 'A luxurious suite with a separate living area.',
                 'price' => 400.00,
-                'capacity_adults' => 2,
-                'capacity_children' => 2,
+                'capacity_adults' => 4,
+                'capacity_children' => 3,
                 'amenities' => 'Wi-Fi, TV, Air Conditioning, Mini-bar, Jacuzzi',
             ],
             [
