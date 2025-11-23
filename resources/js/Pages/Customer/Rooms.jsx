@@ -11,26 +11,33 @@ import {
     X,
     ChevronLeft,
     ChevronRight,
-    Filter,
     Search,
+    Calendar,
+    User,
 } from "lucide-react";
 import Modal from "@/Components/Modal";
 import axios from "axios";
 
+// Helper function to resolve image paths
+const getImageSrc = (imagePath) => {
+    if (!imagePath) return "https://via.placeholder.com/600x400";
+    if (imagePath.startsWith("http") || imagePath.startsWith("/"))
+        return imagePath;
+    return `/storage/${imagePath}`;
+};
+
 const Rooms = () => {
-    const { rooms, roomTypes } = usePage().props;
+    const { rooms } = usePage().props;
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [availableRooms, setAvailableRooms] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [showFilters, setShowFilters] = useState(false);
 
+    // Simplified state: Only keeping what is necessary for booking
     const [filters, setFilters] = useState({
         startDate: "",
         endDate: "",
         adults: 1,
         children: 0,
-        priceRange: [0, 1000],
-        selectedRoomTypes: [],
     });
 
     useEffect(() => {
@@ -59,41 +66,21 @@ const Rooms = () => {
         setFilters((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleRoomTypeChange = (typeName) => {
-        setFilters((prev) => {
-            const selected = prev.selectedRoomTypes;
-            if (selected.includes(typeName)) {
-                return {
-                    ...prev,
-                    selectedRoomTypes: selected.filter((t) => t !== typeName),
-                };
-            }
-            return { ...prev, selectedRoomTypes: [...selected, typeName] };
-        });
-    };
-
     const filteredRooms = useMemo(() => {
         if (!Array.isArray(rooms)) {
             return [];
         }
         return rooms.filter((room) => {
-            if (
-                room.price < filters.priceRange[0] ||
-                room.price > filters.priceRange[1]
-            )
-                return false;
+            // Only filter by capacity and availability
             if (
                 room.capacity_adults < filters.adults ||
                 room.capacity_children < filters.children
             )
                 return false;
-            if (
-                filters.selectedRoomTypes.length > 0 &&
-                !filters.selectedRoomTypes.includes(room.room_type?.name)
-            )
-                return false;
+
             if (availableRooms !== null && !availableRooms.includes(room.id))
                 return false;
+
             return true;
         });
     }, [rooms, filters, availableRooms]);
@@ -102,240 +89,141 @@ const Rooms = () => {
         <CustomerLayout>
             <Head title="Browse Rooms" />
 
-            {/* Hero Section with Search */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 mb-6">
-                <h1 className="text-3xl font-bold text-white mb-2">
-                    Find Your Perfect Room
-                </h1>
-                <p className="text-blue-100 mb-4">
-                    Browse our collection of luxurious accommodations
-                </p>
-                <div className="flex items-center gap-3">
-                    <div className="flex-1 bg-white rounded-lg px-4 py-2 flex items-center">
-                        <Search className="w-5 h-5 text-gray-400" />
+            {/* Hero Section with Integrated Booking Controls */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 mb-8 shadow-lg">
+                <div className="mb-6">
+                    <h1 className="text-3xl font-bold text-white mb-2">
+                        Find Your Perfect Room
+                    </h1>
+                    <p className="text-blue-100">
+                        Select your dates to see real-time availability and
+                        pricing
+                    </p>
+                </div>
+
+                {/* Top Bar Controls (Replaces Sidebar) */}
+                <div className="bg-white p-2 rounded-xl shadow-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                    {/* Start Date */}
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Calendar className="h-5 w-5 text-gray-400" />
+                        </div>
                         <input
-                            type="text"
-                            placeholder="Search rooms..."
-                            className="ml-2 flex-1 border-none outline-none text-sm"
+                            type="date"
+                            name="startDate"
+                            placeholder="Check-in"
+                            value={filters.startDate}
+                            onChange={handleFilterChange}
+                            className="pl-10 block w-full border-transparent bg-gray-50 rounded-lg focus:border-blue-500 focus:bg-white focus:ring-0 text-sm"
                         />
                     </div>
-                    <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className="lg:hidden bg-white text-blue-600 px-4 py-2 rounded-lg font-medium flex items-center gap-2"
-                    >
-                        <Filter className="w-5 h-5" />
-                        Filters
-                    </button>
+
+                    {/* End Date */}
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Calendar className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                            type="date"
+                            name="endDate"
+                            placeholder="Check-out"
+                            value={filters.endDate}
+                            onChange={handleFilterChange}
+                            className="pl-10 block w-full border-transparent bg-gray-50 rounded-lg focus:border-blue-500 focus:bg-white focus:ring-0 text-sm"
+                        />
+                    </div>
+
+                    {/* Adults */}
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <User className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <select
+                            name="adults"
+                            value={filters.adults}
+                            onChange={handleFilterChange}
+                            className="pl-10 block w-full border-transparent bg-gray-50 rounded-lg focus:border-blue-500 focus:bg-white focus:ring-0 text-sm appearance-none"
+                        >
+                            {[1, 2, 3, 4, 5, 6].map((num) => (
+                                <option key={num} value={num}>
+                                    {num} Adult{num > 1 ? "s" : ""}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Children */}
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Users className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <select
+                            name="children"
+                            value={filters.children}
+                            onChange={handleFilterChange}
+                            className="pl-10 block w-full border-transparent bg-gray-50 rounded-lg focus:border-blue-500 focus:bg-white focus:ring-0 text-sm appearance-none"
+                        >
+                            {[0, 1, 2, 3, 4].map((num) => (
+                                <option key={num} value={num}>
+                                    {num} Child{num !== 1 ? "ren" : ""}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Filter Sidebar */}
-                <aside
-                    className={`${
-                        showFilters ? "block" : "hidden lg:block"
-                    } w-full lg:w-80`}
-                >
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 lg:sticky lg:top-4">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-gray-900">
-                                Filters
-                            </h2>
-                            <button
-                                onClick={() => setShowFilters(false)}
-                                className="lg:hidden text-gray-500 hover:text-gray-700"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
+            {/* Main Content - Full Width */}
+            <main>
+                <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-gray-800">
+                        Available Rooms
+                    </h2>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                        {loading
+                            ? "Checking..."
+                            : `${filteredRooms.length} Options`}
+                    </span>
+                </div>
 
-                        {/* Date Selection */}
-                        <div className="mb-6">
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                Check-in & Check-out
-                            </label>
-                            <div className="space-y-3">
-                                <input
-                                    type="date"
-                                    name="startDate"
-                                    value={filters.startDate}
-                                    onChange={handleFilterChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                                />
-                                <input
-                                    type="date"
-                                    name="endDate"
-                                    value={filters.endDate}
-                                    onChange={handleFilterChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Guests */}
-                        <div className="mb-6">
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                Guests
-                            </label>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-xs text-gray-600 mb-1 block">
-                                        Adults
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="adults"
-                                        min="1"
-                                        value={filters.adults}
-                                        onChange={handleFilterChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-gray-600 mb-1 block">
-                                        Children
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="children"
-                                        min="0"
-                                        value={filters.children}
-                                        onChange={handleFilterChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Price Range */}
-                        <div className="mb-6">
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                Price Range
-                            </label>
-                            <div className="px-2">
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="1000"
-                                    value={filters.priceRange[1]}
-                                    onChange={(e) =>
-                                        setFilters((f) => ({
-                                            ...f,
-                                            priceRange: [
-                                                f.priceRange[0],
-                                                parseInt(e.target.value),
-                                            ],
-                                        }))
-                                    }
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                />
-                                <div className="flex justify-between mt-2">
-                                    <span className="text-sm font-medium text-gray-700">
-                                        ${filters.priceRange[0]}
-                                    </span>
-                                    <span className="text-sm font-medium text-gray-700">
-                                        ${filters.priceRange[1]}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Room Types */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                Room Type
-                            </label>
-                            <div className="space-y-3">
-                                {Array.isArray(roomTypes) &&
-                                    roomTypes.map((type) => (
-                                        <label
-                                            key={type.id}
-                                            className="flex items-center cursor-pointer group"
-                                        >
-                                            <input
-                                                id={`type-${type.id}`}
-                                                type="checkbox"
-                                                onChange={() =>
-                                                    handleRoomTypeChange(
-                                                        type.name
-                                                    )
-                                                }
-                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                                            />
-                                            <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900">
-                                                {type.name}
-                                            </span>
-                                        </label>
-                                    ))}
-                            </div>
-                        </div>
-
-                        {/* Clear Filters */}
-                        <button
-                            onClick={() =>
-                                setFilters({
-                                    startDate: "",
-                                    endDate: "",
-                                    adults: 1,
-                                    children: 0,
-                                    priceRange: [0, 1000],
-                                    selectedRoomTypes: [],
-                                })
-                            }
-                            className="w-full mt-6 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm transition"
-                        >
-                            Clear All Filters
-                        </button>
-                    </div>
-                </aside>
-
-                {/* Room List */}
-                <main className="flex-1 min-w-0">
-                    <div className="mb-4 flex items-center justify-between">
-                        <p className="text-sm text-gray-600">
-                            {loading
-                                ? "Checking availability..."
-                                : `${filteredRooms.length} rooms available`}
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                        <p className="text-gray-500">
+                            Checking availability...
                         </p>
                     </div>
-
-                    {loading ? (
-                        <div className="flex items-center justify-center py-20">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                        </div>
-                    ) : (
-                        <div className="space-y-6">
-                            {filteredRooms.length > 0 ? (
-                                filteredRooms.map((room) => (
-                                    <RoomCard
-                                        key={room.id}
-                                        room={room}
-                                        filters={filters}
-                                        onSelectRoom={setSelectedRoom}
-                                        isAvailable={
-                                            availableRooms === null ||
-                                            availableRooms.includes(room.id)
-                                        }
-                                    />
-                                ))
-                            ) : (
-                                <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
-                                    <div className="text-gray-400 mb-4">
-                                        <Search className="w-16 h-16 mx-auto" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                        No rooms found
-                                    </h3>
-                                    <p className="text-gray-600">
-                                        Try adjusting your filters to see more
-                                        results
-                                    </p>
+                ) : (
+                    <div className="flex flex-col gap-6">
+                        {filteredRooms.length > 0 ? (
+                            filteredRooms.map((room) => (
+                                <RoomCard
+                                    key={room.id}
+                                    room={room}
+                                    filters={filters}
+                                    onSelectRoom={setSelectedRoom}
+                                    isAvailable={
+                                        availableRooms === null ||
+                                        availableRooms.includes(room.id)
+                                    }
+                                />
+                            ))
+                        ) : (
+                            <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
+                                <div className="text-gray-400 mb-4">
+                                    <Search className="w-16 h-16 mx-auto" />
                                 </div>
-                            )}
-                        </div>
-                    )}
-                </main>
-            </div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                    No rooms found
+                                </h3>
+                                <p className="text-gray-600">
+                                    Try adjusting your dates or guest count.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </main>
 
             {selectedRoom && (
                 <RoomDetailModal
@@ -365,24 +253,20 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
         WiFi: <Wifi className="w-4 h-4" />,
         AC: <Wind className="w-4 h-4" />,
         "King Bed": <Bed className="w-4 h-4" />,
+        "Queen Bed": <Bed className="w-4 h-4" />,
     };
 
     return (
         <div
-            className={`bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-lg ${
+            className={`relative bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-lg hover:z-10 ${
                 isAvailable ? "cursor-pointer" : "opacity-60"
             }`}
             onClick={() => isAvailable && onSelectRoom(room)}
         >
             <div className="flex flex-col md:flex-row">
-                {/* Image */}
-                <div className="md:w-72 h-56 md:h-auto flex-shrink-0">
+                <div className="md:w-72 md:min-w-[288px] h-56 md:h-auto md:min-h-[280px] flex-shrink-0 relative">
                     <img
-                        src={
-                            room.image_path ||
-                            room.images?.[0] ||
-                            "https://via.placeholder.com/300x200"
-                        }
+                        src={getImageSrc(room.image_path || room.images?.[0])}
                         alt={
                             room.room_type?.name ||
                             room.roomType?.name ||
@@ -393,52 +277,52 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
                     />
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between h-full">
-                        {/* Room Info */}
-                        <div className="flex-1 mb-4 lg:mb-0 lg:pr-6">
-                            <div className="flex items-start justify-between mb-2">
-                                <h3 className="text-xl font-bold text-gray-900">
+                <div className="flex-1 p-6 flex flex-col min-h-[280px]">
+                    <div className="flex flex-col lg:flex-row gap-6 h-full">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-3 mb-3">
+                                <h3 className="text-xl font-bold text-gray-900 line-clamp-2">
                                     {room.room_type?.name ||
                                         room.roomType?.name ||
                                         room.name ||
                                         "Room"}
                                 </h3>
                                 {!isAvailable && (
-                                    <span className="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">
+                                    <span className="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap flex-shrink-0">
                                         Unavailable
                                     </span>
                                 )}
                             </div>
 
-                            {/* Capacity */}
                             <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                                 <div className="flex items-center gap-1">
-                                    <Users className="w-4 h-4" />
-                                    <span>{room.capacity_adults} Adults</span>
+                                    <Users className="w-4 h-4 flex-shrink-0" />
+                                    <span className="whitespace-nowrap">
+                                        {room.capacity_adults} Adults
+                                    </span>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <Users className="w-4 h-4 opacity-70" />
-                                    <span>
+                                    <Users className="w-4 h-4 opacity-70 flex-shrink-0" />
+                                    <span className="whitespace-nowrap">
                                         {room.capacity_children} Children
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Amenities */}
                             <div className="flex flex-wrap gap-2 mb-3">
-                                {room.amenities?.slice(0, 4).map((amenity) => (
-                                    <div
-                                        key={amenity}
-                                        className="flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full"
-                                    >
-                                        {amenitiesIcons[amenity] || (
-                                            <Star className="w-3 h-3" />
-                                        )}
-                                        <span>{amenity}</span>
-                                    </div>
-                                ))}
+                                {room.amenities
+                                    ?.slice(0, 4)
+                                    .map((amenity, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full"
+                                        >
+                                            {amenitiesIcons[amenity] || (
+                                                <Star className="w-3 h-3" />
+                                            )}
+                                            <span>{amenity}</span>
+                                        </div>
+                                    ))}
                                 {room.amenities?.length > 4 && (
                                     <div className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full">
                                         +{room.amenities.length - 4} more
@@ -446,7 +330,6 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
                                 )}
                             </div>
 
-                            {/* Description */}
                             <p className="text-sm text-gray-600 line-clamp-2">
                                 {room.room_type?.description ||
                                     room.roomType?.description ||
@@ -455,9 +338,8 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
                             </p>
                         </div>
 
-                        {/* Price & Action */}
-                        <div className="lg:w-48 flex-shrink-0 flex flex-col items-end justify-between lg:border-l lg:pl-6 lg:h-full">
-                            <div className="text-right mb-4 w-full">
+                        <div className="lg:w-52 lg:min-w-[208px] flex-shrink-0 flex flex-col justify-between lg:border-l lg:border-gray-200 lg:pl-6">
+                            <div className="mb-4">
                                 <div className="flex items-baseline justify-end mb-1">
                                     <span className="text-3xl font-bold text-gray-900">
                                         ${room.price}
@@ -483,7 +365,7 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
                             </div>
 
                             <button
-                                className={`w-full font-semibold py-3 px-6 rounded-lg transition text-sm ${
+                                className={`w-full font-semibold py-3 px-4 rounded-lg transition text-sm ${
                                     isAvailable && startDate && endDate
                                         ? "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
                                         : "bg-gray-200 text-gray-500 cursor-not-allowed"
@@ -522,9 +404,9 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
     }
 
     const images = room.image_path
-        ? [room.image_path]
+        ? [getImageSrc(room.image_path)]
         : room.images && room.images.length > 0
-        ? room.images
+        ? room.images.map((img) => getImageSrc(img))
         : ["https://via.placeholder.com/600x400"];
 
     const nextImage = () => {

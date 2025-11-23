@@ -13,7 +13,10 @@ import {
 import AlertDialog from "@/Components/AlertDialog";
 
 export default function CustomerLayout({ children }) {
-    const { url } = usePage();
+    // 1. Get the auth prop from usePage()
+    const { url, props } = usePage();
+    const user = props.auth.user; // Access the shared user object
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isLogoutAlertOpen, setIsLogoutAlertOpen] = useState(false);
 
@@ -92,8 +95,6 @@ export default function CustomerLayout({ children }) {
                 <nav className="p-4 space-y-2">
                     {navItems.map((item) => {
                         const Icon = item.icon;
-
-                        // ⭐ FIXED isActive here:
                         const isActive = route().current(item.key);
 
                         return (
@@ -133,15 +134,18 @@ export default function CustomerLayout({ children }) {
                 <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700">
                     <div className="bg-gray-700/50 rounded-xl p-4 backdrop-blur-sm">
                         <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-sm font-bold">
-                                JD
+                            {/* Dynamic Initials */}
+                            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-sm font-bold uppercase">
+                                {user.first_name[0]}
+                                {user.last_name[0]}
                             </div>
-                            <div className="flex-1">
-                                <p className="text-sm font-semibold text-white">
-                                    John Doe
+                            <div className="flex-1 min-w-0">
+                                {/* Dynamic Name and Email */}
+                                <p className="text-sm font-semibold text-white truncate">
+                                    {user.first_name} {user.last_name}
                                 </p>
-                                <p className="text-xs text-gray-400">
-                                    john@example.com
+                                <p className="text-xs text-gray-400 truncate">
+                                    {user.email}
                                 </p>
                             </div>
                         </div>
