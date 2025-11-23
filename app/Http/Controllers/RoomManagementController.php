@@ -167,9 +167,14 @@ class RoomManagementController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Room $room) // Type-hinting for route model binding
     {
-        //
+        // Eager load roomType and current_booking (if any) with its customer
+        $room->load(['roomType', 'currentBooking.customer']);
+
+        return Inertia::render('Admin/RoomManagement/RoomDetailsModal', [
+            'room' => $room,
+        ]);
     }
 
     /**

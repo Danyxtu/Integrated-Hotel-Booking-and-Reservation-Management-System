@@ -83,52 +83,84 @@ const BookingDetails = ({ booking, show, onClose }) => {
                         </div>
                     </div>
 
-                    {/* Booking Details */}
-                    <div className="p-4 border rounded-lg">
-                         <h3 className="font-semibold mb-4 text-lg">Reservation Details</h3>
-                        <div className="grid grid-cols-3 gap-4">
-                             <div>
-                                <Label htmlFor="room-number">Room</Label>
-                                <p id="room-number" className="font-medium text-sm">
-                                    {booking.room?.room_number}
-                                </p>
-                            </div>
-                            <div>
-                                <Label htmlFor="check-in">Check-in Date</Label>
-                                <p id="check-in" className="font-medium text-sm">
-                                    {new Date(booking.check_in_date).toLocaleDateString()}
-                                </p>
-                            </div>
-                            <div>
-                                <Label htmlFor="check-out">Check-out Date</Label>
-                                <p id="check-out" className="font-medium text-sm">
-                                    {new Date(booking.check_out_date).toLocaleDateString()}
-                                </p>
-                            </div>
-                            <div>
-                                <Label htmlFor="total-price">Total Price</Label>
-                                <p id="total-price" className="font-medium text-sm">
-                                    ${parseFloat(booking.total_price).toFixed(2)}
-                                </p>
-                            </div>
-                            <div>
-                                <Label htmlFor="status">Status</Label>
-                                <div>
-                                     <Badge variant={getStatusVariant(booking.status)} className="capitalize">
-                                        {booking.status}
-                                    </Badge>
-                                </div>
-                            </div>
-                             <div>
-                                <Label htmlFor="booking-source">Booking Source</Label>
-                                <p id="booking-source" className="font-medium text-sm capitalize">
-                                    {booking.booking_source}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                                         {/* Booking Details */}
+                                        <div className="p-4 border rounded-lg">
+                                             <h3 className="font-semibold mb-4 text-lg">Reservation Details</h3>
+                                            <div className="grid grid-cols-3 gap-4">
+                                                 <div>
+                                                    <Label htmlFor="room-number">Room</Label>
+                                                    <p id="room-number" className="font-medium text-sm">
+                                                        {booking.room?.room_number}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="check-in">Check-in Date</Label>
+                                                    <p id="check-in" className="font-medium text-sm">
+                                                        {new Date(booking.check_in_date).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="check-out">Check-out Date</Label>
+                                                    <p id="check-out" className="font-medium text-sm">
+                                                        {new Date(booking.check_out_date).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="total-price">Total Price</Label>
+                                                    <p id="total-price" className="font-medium text-sm">
+                                                        ${parseFloat(booking.total_price).toFixed(2)}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <Label htmlFor="status">Status</Label>
+                                                    <div>
+                                                         <Badge variant={getStatusVariant(booking.status)} className="capitalize">
+                                                            {booking.status}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                                 <div>
+                                                    <Label htmlFor="booking-source">Booking Source</Label>
+                                                    <p id="booking-source" className="font-medium text-sm capitalize">
+                                                        {booking.booking_source}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                    
+                                        {/* Payment Details */}
+                                        {booking.payment && (
+                                            <div className="p-4 border rounded-lg">
+                                                <h3 className="font-semibold mb-4 text-lg">Payment Information</h3>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <Label htmlFor="payment-status">Payment Status</Label>
+                                                        <Badge variant={getStatusVariant(booking.payment.status)} className="capitalize">
+                                                            {booking.payment.status}
+                                                        </Badge>
+                                                    </div>
+                                                    <div>
+                                                        <Label htmlFor="payment-method">Payment Method</Label>
+                                                        <p id="payment-method" className="font-medium text-sm capitalize">
+                                                            {booking.payment.method}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <Label htmlFor="amount-paid">Amount Paid</Label>
+                                                        <p id="amount-paid" className="font-medium text-sm">
+                                                            ${parseFloat(booking.payment.amount).toFixed(2)}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <Label htmlFor="transaction-id">Transaction ID</Label>
+                                                        <p id="transaction-id" className="font-medium text-sm">
+                                                            {booking.payment.transaction_id || 'N/A'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={handleClose}>
                         Close

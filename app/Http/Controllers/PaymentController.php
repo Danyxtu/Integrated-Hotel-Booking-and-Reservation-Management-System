@@ -76,17 +76,6 @@ class PaymentController extends Controller
         // You might want to fetch and pass refunded payments here in the future
         return Inertia::render('Admin/Payments/Refunds');
     }
-    public function showAllReports(){
-        //  $monthlyRevenue = Payment::where('status', EnumsPaymentStatus::Completed)
-        //     ->whereMonth('created_at', now()->month)
-        //     ->sum('amount');
-
-        //  totalRefunds = bookings where status = refunded;
-        //  totalTransaction = Booking::count();
-        return Inertia::render('Admin/Payments/Reports',[
-            // Todo
-        ]);
-    }
 
     public function updateStatus(Request $request, Payment $payment)
     {

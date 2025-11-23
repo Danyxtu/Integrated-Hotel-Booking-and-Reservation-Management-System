@@ -138,7 +138,11 @@ class ReservationController extends Controller
      */
     public function show(Booking $booking)
     {
-        // Todo
+        $booking->load(['customer', 'room.roomType', 'payment']);
+
+        return Inertia::render('Admin/Reservations/BookingDetails', [
+            'booking' => $booking,
+        ]);
     }
 
     /**

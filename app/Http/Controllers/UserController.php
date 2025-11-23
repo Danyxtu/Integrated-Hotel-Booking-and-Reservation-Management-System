@@ -34,13 +34,6 @@ class UserController extends Controller
         ]);
     }
 
-    public function showAllStaff(){
-        return Inertia::render('Admin/GuestsUsers/Staff');
-    }
-    public function showAllRoles(){
-        return Inertia::render('Admin/GuestsUsers/Roles');
-    }
-
     public function storeAdmin(Request $request)
     {
         $validated = $request->validate([
@@ -97,9 +90,16 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(User $user)
     {
-        //
+        // Load customer and bookings if the user is a customer
+        if ($user->role === 'user') {
+            $user->load(['customer', 'bookings.room.roomType']);
+        }
+
+        return Inertia::render('Admin/GuestsUsers/UserDetailsModal', [
+            'user' => $user,
+        ]);
     }
 
     /**

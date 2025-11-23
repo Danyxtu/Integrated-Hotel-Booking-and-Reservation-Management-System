@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import AdminLayout from "@/Layouts/AdminLayout";
 import { Search, PlusCircle, Eye, Edit, Trash2, FileText } from "lucide-react";
+import UserDetailsModal from "./UserDetailsModal"; // Import the UserDetailsModal
 
 const AllCustomers = ({ customers }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilter, setActiveFilter] = useState('All'); // 'All', 'Guest', 'Users'
+    const [isUserDetailsModalOpen, setIsUserDetailsModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
 
     const filteredCustomers = customers.filter(customer => {
         const matchesSearch =
             customer.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             customer.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            customer.phone.includes(searchTerm);
+            customer.phone?.includes(searchTerm); // Added optional chaining for phone
 
         const matchesFilter = activeFilter === 'All' ||
             (activeFilter === 'Guest' && customer.user_id === null) ||
@@ -19,6 +22,16 @@ const AllCustomers = ({ customers }) => {
         
         return matchesSearch && matchesFilter;
     });
+
+    const handleViewDetails = (customer) => {
+        // Here, we assume the 'customer' object passed to AllCustomers also contains
+        // the full user object if user_id is present.
+        // Or, we might need to fetch the full user object if the customer data is partial.
+        // For now, let's assume 'customer' can be directly passed as 'user' to UserDetailsModal
+        // as the modal is designed to handle a 'user' prop that might include customer details.
+        setSelectedUser({ ...customer, role: customer.user_id ? 'user' : 'guest' }); // Assign a role for modal logic
+        setIsUserDetailsModalOpen(true);
+    };
 
     return (
         <AdminLayout>
@@ -96,7 +109,11 @@ const AllCustomers = ({ customers }) => {
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <div className="flex items-center justify-center gap-2">
-                                                <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition" title="View Details">
+                                                <button
+                                                    onClick={() => handleViewDetails(customer)}
+                                                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"
+                                                    title="View Details"
+                                                >
                                                     <Eye className="w-4 h-4"/>
                                                 </button>
                                                 <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition" title="Edit Customer">
@@ -123,6 +140,13 @@ const AllCustomers = ({ customers }) => {
                     </table>
                 </div>
             </div>
+            {selectedUser && (
+                <UserDetailsModal
+                    user={selectedUser}
+                    show={isUserDetailsModalOpen}
+                    onClose={() => setIsUserDetailsModalOpen(false)}
+                />
+            )}
         </AdminLayout>
     );
 };

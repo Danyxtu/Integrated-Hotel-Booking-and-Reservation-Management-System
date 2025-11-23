@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { Search, PlusCircle, Edit, Trash2, FileText, UserMinus } from "lucide-react";
+import { Search, PlusCircle, Edit, Trash2, FileText, UserMinus, Eye } from "lucide-react";
 import { useForm, router } from "@inertiajs/react";
 import Modal from "@/Components/Modal";
 import InputLabel from "@/Components/InputLabel";
@@ -8,6 +8,7 @@ import TextInput from "@/Components/TextInput";
 import SecondaryButton from "@/Components/SecondaryButton";
 import PrimaryButton from "@/Components/PrimaryButton";
 import InputError from "@/Components/InputError";
+import UserDetailsModal from "./UserDetailsModal"; // Import the UserDetailsModal
 
 
 // New component for adding admin
@@ -123,6 +124,8 @@ const CreateAdminModal = ({ show, onClose }) => {
 const Admins = ({ admins, loggedInUserId }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddAdminModalOpen, setAddAdminModalOpen] = useState(false);
+    const [isUserDetailsModalOpen, setIsUserDetailsModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
 
     const filteredAdmins = admins.filter(admin =>
         admin.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -134,6 +137,11 @@ const Admins = ({ admins, loggedInUserId }) => {
         if (confirm("Are you sure you want to delete this admin account?")) {
             router.delete(route('admin.users.delete', adminId));
         }
+    };
+
+    const handleViewDetails = (admin) => {
+        setSelectedUser({ ...admin, role: 'admin' }); // Assign role for modal logic
+        setIsUserDetailsModalOpen(true);
     };
 
     return (
@@ -185,6 +193,13 @@ const Admins = ({ admins, loggedInUserId }) => {
                                         <td className="px-6 py-4">{admin.email}</td>
                                         <td className="px-6 py-4 text-center">
                                             <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() => handleViewDetails(admin)}
+                                                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"
+                                                    title="View Details"
+                                                >
+                                                    <Eye className="w-4 h-4"/>
+                                                </button>
                                                 {/* Edit button placeholder */}
                                                 <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition" title="Edit Admin">
                                                     <Edit className="w-4 h-4"/>
@@ -230,6 +245,13 @@ const Admins = ({ admins, loggedInUserId }) => {
                 show={isAddAdminModalOpen}
                 onClose={() => setAddAdminModalOpen(false)}
             />
+            {selectedUser && (
+                <UserDetailsModal
+                    user={selectedUser}
+                    show={isUserDetailsModalOpen}
+                    onClose={() => setIsUserDetailsModalOpen(false)}
+                />
+            )}
         </AdminLayout>
     );
 };

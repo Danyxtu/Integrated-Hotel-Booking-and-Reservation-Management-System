@@ -13,6 +13,7 @@ import {
     Edit,
     MoreVertical,
     ToggleLeft,
+    Eye,
 } from "lucide-react";
 import { router, useForm } from "@inertiajs/react";
 import Modal from "@/Components/Modal";
@@ -21,6 +22,7 @@ import TextInput from "@/Components/TextInput";
 import SecondaryButton from "@/Components/SecondaryButton";
 import PrimaryButton from "@/Components/PrimaryButton";
 import { debounce } from "lodash";
+import RoomDetailsModal from "./RoomDetailsModal"; // Import the new modal component
 
 const statusStyles = {
     Available: "bg-green-100 text-green-800",
@@ -141,6 +143,7 @@ const AllRooms = ({
         search: initialFilters.search || "",
     });
     const [isAddRoomModalOpen, setAddRoomModalOpen] = useState(false);
+    const [selectedRoom, setSelectedRoom] = useState(null); // State for selected room
 
     const debouncedSearch = useCallback(
         debounce((value) => {
@@ -323,11 +326,17 @@ const AllRooms = ({
                                             /night
                                         </span>
                                     </p>
-                                    {/* <div className="flex items-center gap-2">
-                                         <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><Edit className="w-4 h-4"/></button>
+                                    <div className="flex items-center gap-2">
+                                         <button
+                                            onClick={() => setSelectedRoom(room)}
+                                            className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                        </button>
+                                         {/* <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><Edit className="w-4 h-4"/></button>
                                          <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><ToggleLeft className="w-4 h-4"/></button>
-                                         <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><MoreVertical className="w-4 h-4"/></button>
-                                    </div> */}
+                                         <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><MoreVertical className="w-4 h-4"/></button> */}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -346,6 +355,11 @@ const AllRooms = ({
                 onClose={() => setAddRoomModalOpen(false)}
                 roomTypes={roomTypes}
                 roomStatuses={roomStatuses}
+            />
+            <RoomDetailsModal
+                room={selectedRoom}
+                show={!!selectedRoom}
+                onClose={() => setSelectedRoom(null)}
             />
         </AdminLayout>
     );

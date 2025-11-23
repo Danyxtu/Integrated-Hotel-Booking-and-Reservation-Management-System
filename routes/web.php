@@ -12,13 +12,30 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\RoomController;
+use App\Models\RoomType; // Import RoomType model
+use Illuminate\Http\Request; // Import Request
 
-Route::get('/',function () {
+Route::get('/', function (Request $request) { // Add Request $request
+    $roomTypes = RoomType::all(); // Fetch all room types
+
+    $rooms = $roomTypes->map(function ($roomType) {
+        return [
+            'id' => $roomType->id,
+            'name' => $roomType->name,
+            'price' => $roomType->price,
+            'image_path' => $roomType->image_path ?? 'https://via.placeholder.com/600x400', // Default image if none
+            'features' => explode(',', $roomType->amenities), // Assuming amenities are comma-separated
+            'rating' => 4.5, // Placeholder rating as it's not in the database
+        ];
+    })->toArray();
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'rooms' => $rooms, // Pass the transformed rooms data
+        'searchParams' => $request->query(), // Pass query parameters as searchParams
     ]);
 });
 
@@ -48,7 +65,7 @@ Route::middleware(['auth','role:admin'])
 
         // Reservations
         Route::get('/reservations/all-bookings', [ReservationController::class, 'showAllBookings'])->name('reservations.all-bookings');
-        Route::get('/reservations/all-booklings/{booking}',[ReservationController::class, 'show'])->name('reservations.show-booking');
+        Route::get('/reservations/all-bookings/{booking}',[ReservationController::class, 'show'])->name('reservations.show-booking');
         Route::get('/reservations/check-ins', [ReservationController::class, 'showCheckInsToday'])->name('reservations.check-ins');
         Route::get('/reservations/check-outs', [ReservationController::class, 'showCheckoutsToday'])->name('reservations.check-outs');
         Route::get('/reservations/pendings', [ReservationController::class, 'showPending'])->name('reservations.pending');
@@ -66,7 +83,6 @@ Route::middleware(['auth','role:admin'])
         Route::get('/payments/all',[PaymentController::class, 'showAllPayments'])->name('payments.all');
         Route::get('/payments/pending',[PaymentController::class, 'showAllPendingPayments'])->name('payments.pending');
         Route::get('/payments/refunds',[PaymentController::class, 'showAllRefunds'])->name('payments.refunds');
-        Route::get('/payments/reports',[PaymentController::class, 'showAllReports'])->name('payments.reports');
         Route::patch('/payments/{payment}/update-status', [PaymentController::class, 'updateStatus'])->name('payments.updateStatus');
         Route::patch('/payments/{payment}/refund', [PaymentController::class, 'refundPayment'])->name('payments.refund');
 
@@ -75,7 +91,6 @@ Route::middleware(['auth','role:admin'])
         Route::get('/users/admins', [UserController::class, 'showAllAdmins'])->name('users.admins'); // New route
         Route::post('/users/admins/store', [UserController::class, 'storeAdmin'])->name('users.storeAdmin'); // New route
         Route::delete('/users/{user}', [UserController::class, 'deleteUser'])->name('users.delete'); // New route for deleting user
-        Route::get('/users/staffs', [UserController::class, 'showAllStaff'])->name('users.staff');
         Route::get('/users/roles', [UserController::class, 'showAllRoles'])->name('users.roles');
         
         // Settings

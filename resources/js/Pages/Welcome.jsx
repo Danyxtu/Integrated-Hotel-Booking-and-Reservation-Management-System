@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Calendar,
     Users,
@@ -12,19 +12,34 @@ import {
     Sparkles,
     Clock,
     Award,
+    Baby, // Add Baby icon for children
 } from "lucide-react";
-import { Link } from "@inertiajs/react";
-import { usePage } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 
-export default function HotelBooking({ laravelVersion }) {
-    console.log(laravelVersion);
-    const [checkIn, setCheckIn] = useState("");
-    const [checkOut, setCheckOut] = useState("");
-    const [guests, setGuests] = useState(2);
+export default function Welcome({ auth, laravelVersion, phpVersion, rooms, searchParams }) {
+    const standardRoom = rooms && rooms.length > 0 ? rooms[0] : null;
+    const signatureRooms = rooms && rooms.length > 1 ? rooms.slice(1, 4) : [];
+    const { props } = usePage();
+    const user = props.auth.user;
+    const initialCheckIn = searchParams?.start_date || "";
+    const initialCheckOut = searchParams?.end_date || "";
+    const initialAdults = searchParams?.adults || 1;
+    const initialChildren = searchParams?.children || 0;
+
+    const [checkIn, setCheckIn] = useState(initialCheckIn);
+    const [checkOut, setCheckOut] = useState(initialCheckOut);
+    const [adults, setAdults] = useState(initialAdults);
+    const [children, setChildren] = useState(initialChildren);
     const [isScrolled, setIsScrolled] = useState(false);
 
-    const user = usePage().props.auth.user;
-    console.log(user);
+    const handleSearch = () => {
+        router.get(route('rooms.search'), {
+            start_date: checkIn,
+            end_date: checkOut,
+            adults: adults,
+            children: children,
+        });
+    };
 
     React.useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -51,29 +66,7 @@ export default function HotelBooking({ laravelVersion }) {
         },
     ];
 
-    const rooms = [
-        {
-            name: "Deluxe Suite",
-            price: 299,
-            image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&h=600&fit=crop",
-            features: ["King Bed", "Ocean View", "45m²"],
-            rating: 4.9,
-        },
-        {
-            name: "Executive Room",
-            price: 199,
-            image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&h=600&fit=crop",
-            features: ["Queen Bed", "City View", "35m²"],
-            rating: 4.8,
-        },
-        {
-            name: "Presidential Suite",
-            price: 599,
-            image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop",
-            features: ["2 Bedrooms", "Panoramic View", "85m²"],
-            rating: 5.0,
-        },
-    ];
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -192,27 +185,65 @@ export default function HotelBooking({ laravelVersion }) {
                                         />
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                        <Users className="w-4 h-4 text-blue-600" />
-                                        Guests
-                                    </label>
-                                    <select
-                                        value={guests}
-                                        onChange={(e) =>
-                                            setGuests(Number(e.target.value))
-                                        }
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
-                                    >
-                                        {[1, 2, 3, 4, 5, 6].map((num) => (
-                                            <option key={num} value={num}>
-                                                {num}{" "}
-                                                {num === 1 ? "Guest" : "Guests"}
-                                            </option>
-                                        ))}
-                                    </select>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                            <Users className="w-4 h-4 text-blue-600" />
+                                            Adults
+                                        </label>
+                                        <select
+                                            value={adults}
+                                            onChange={(e) =>
+                                                setAdults(
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
+                                        >
+                                            {[1, 2, 3, 4, 5, 6].map((num) => (
+                                                <option key={num} value={num}>
+                                                    {num}{" "}
+                                                    {num === 1
+                                                        ? "Adult"
+                                                        : "Adults"}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                            <Baby className="w-4 h-4 text-blue-600" />
+                                            Children
+                                        </label>
+                                        <select
+                                            value={children}
+                                            onChange={(e) =>
+                                                setChildren(
+                                                    Number(e.target.value)
+                                                )
+                                            }
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
+                                        >
+                                            {[0, 1, 2, 3, 4, 5, 6].map(
+                                                (num) => (
+                                                    <option
+                                                        key={num}
+                                                        value={num}
+                                                    >
+                                                        {num}{" "}
+                                                        {num === 1
+                                                            ? "Child"
+                                                            : "Children"}
+                                                    </option>
+                                                )
+                                            )}
+                                        </select>
+                                    </div>
                                 </div>
-                                <button className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl hover:scale-105 transition transform flex items-center justify-center gap-2">
+                                <button
+                                    onClick={() => handleSearch}
+                                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl hover:scale-105 transition transform flex items-center justify-center gap-2"
+                                >
                                     <Search className="w-5 h-5" />
                                     Search Available Rooms
                                 </button>
@@ -221,32 +252,37 @@ export default function HotelBooking({ laravelVersion }) {
 
                         <div className="relative">
                             <div className="absolute -top-10 -right-10 w-72 h-72 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-                            <img
-                                src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&h=1000&fit=crop"
-                                alt="Luxury Hotel"
-                                className="relative rounded-3xl shadow-2xl w-full h-[600px] object-cover"
-                            />
-                            <div className="absolute bottom-8 left-8 right-8 bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">
-                                            Starting from
-                                        </p>
-                                        <p className="text-3xl font-bold text-gray-900">
-                                            $199
-                                            <span className="text-lg text-gray-500">
-                                                /night
-                                            </span>
-                                        </p>
+                            {standardRoom && (
+                                <>
+                                    <img
+                                        src={standardRoom.image_path}
+                                        alt={standardRoom.name}
+                                        className="relative rounded-3xl shadow-2xl w-full h-[600px] object-cover"
+                                    />
+                                    <div className="absolute bottom-8 left-8 right-8 bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm text-gray-600 mb-1">
+                                                    Starting from
+                                                </p>
+                                                <p className="text-3xl font-bold text-gray-900">
+                                                    ${standardRoom.price}
+                                                    <span className="text-lg text-gray-500">
+                                                        /night
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-1 px-4 py-2 bg-yellow-50 rounded-full">
+                                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                                <span className="font-bold text-gray-900">
+                                                    {standardRoom.rating ||
+                                                        4.9}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-1 px-4 py-2 bg-yellow-50 rounded-full">
-                                        <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                                        <span className="font-bold text-gray-900">
-                                            4.9
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -294,21 +330,21 @@ export default function HotelBooking({ laravelVersion }) {
                         </p>
                     </div>
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {rooms.map((room, idx) => (
+                        {signatureRooms.map((room, idx) => (
                             <div
                                 key={idx}
                                 className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition duration-300 border border-gray-100"
                             >
                                 <div className="relative overflow-hidden h-64">
                                     <img
-                                        src={room.image}
+                                        src={room.image_path}
                                         alt={room.name}
                                         className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                     />
                                     <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
                                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                                         <span className="font-bold text-sm">
-                                            {room.rating}
+                                            {room.rating || 4.9}
                                         </span>
                                     </div>
                                 </div>
@@ -317,7 +353,7 @@ export default function HotelBooking({ laravelVersion }) {
                                         {room.name}
                                     </h4>
                                     <div className="flex gap-2 mb-4 flex-wrap">
-                                        {room.features.map((feat, i) => (
+                                        {room.features && room.features.map((feat, i) => (
                                             <span
                                                 key={i}
                                                 className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
