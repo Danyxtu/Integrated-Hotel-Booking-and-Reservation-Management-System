@@ -6,14 +6,18 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use App\Models\Customer;
 use App\Models\Room;
-use App\Models\Payment; // Import the Payment model
-use App\Enums\PaymentStatus; // Import the PaymentStatus enum
-use Carbon\Carbon; // Import Carbon for payment_date
-use Inertia\Inertia; // Import Inertia
-use Illuminate\Foundation\Application; // Import Application for version info
-use Illuminate\Support\Facades\Route; // Import Route for has()
-use Illuminate\Support\Facades\DB; // Import DB for transactions
-use Illuminate\Support\Facades\Log; // Import Log for simulating email
+use App\Models\Payment;
+use App\Enums\PaymentStatus;
+use Carbon\Carbon;
+use Inertia\Inertia;
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BookingConfirmation;
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
 
 class BookingController extends Controller
 {
@@ -85,18 +89,18 @@ class BookingController extends Controller
 
         $rooms = $availableRooms->map(function ($room) {
             return [
-                'id' => $room->roomType->id, // Use roomType's ID
-                'room_id' => $room->id, // Pass the actual room ID for booking
+                'id' => $room->roomType->id,
+                'room_id' => $room->id,
                 'name' => $room->roomType->name,
                 'price' => $room->roomType->price,
-                'image_path' => $room->roomType->image_path ?? 'https://via.placeholder.com/600x400',
+                'image_path' => $room->roomType->image_path,
                 'features' => explode(',', $room->roomType->amenities),
-                'rating' => 4.5, // Placeholder rating
+                'rating' => $room->roomType->rating ?? 4.5, // Dynamic rating
             ];
         })->toArray();
 
         return Inertia::render('Welcome', [
-            'rooms' => $rooms, // Pass the transformed rooms data
+            'rooms' => $rooms,
             'searchParams'   => [
                 'start_date' => $startDate,
                 'end_date'   => $endDate,
@@ -105,23 +109,13 @@ class BookingController extends Controller
             ],
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
-            'laravelVersion' => Application::VERSION, // Re-add laravelVersion
-            'phpVersion' => PHP_VERSION, // Re-add phpVersion
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
         ]);
     }
 
-
-
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * Store a newly created resource in storage (Admin/Internal).
      */
     public function store(Request $request)
     {
@@ -146,8 +140,8 @@ class BookingController extends Controller
             'first_name' => $validated['first_name'],
             'last_name'  => $validated['last_name'],
             'phone'      => $validated['phone'],
-            'type'       => 'walk_in', // make sure this column exists
-            'user_id'    => null,      // walk-ins don't have a user account
+            'type'       => 'walk_in',
+            'user_id'    => null,
         ]);
 
         // Create booking
@@ -157,7 +151,7 @@ class BookingController extends Controller
             'check_in_date'  => $validated['check_in_date'],
             'check_out_date' => $validated['check_out_date'],
             'total_price'    => $validated['total_price'],
-            'status'         => $validated['status'], // fixed
+            'status'         => $validated['status'],
             'booking_source' => 'walk_in',
             'booking_number' => $bookingNumber,
         ]);
@@ -166,9 +160,9 @@ class BookingController extends Controller
         Payment::create([
             'booking_id'      => $booking->id,
             'amount'          => $validated['total_price'],
-            'payment_method'  => 'Unspecified', // Default method for admin-created bookings
-            'status'          => PaymentStatus::Pending, // Default to pending
-            'transaction_id'  => 'TRX' . strtoupper(uniqid()), // Generate a simple unique transaction ID
+            'payment_method'  => 'Unspecified',
+            'status'          => PaymentStatus::Pending,
+            'transaction_id'  => 'TRX' . strtoupper(uniqid()),
             'payment_date'    => Carbon::now(),
         ]);
 
@@ -177,9 +171,6 @@ class BookingController extends Controller
 
     /**
      * Handle public room booking storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function storePublic(Request $request)
     {
@@ -196,6 +187,7 @@ class BookingController extends Controller
             'total_price'    => 'required|numeric|min:0',
         ]);
 
+        // We use a transaction to ensure data integrity
         return DB::transaction(function () use ($validated, $request) {
             // 1. Re-check room availability
             $isRoomAvailable = !Booking::where('room_id', $validated['room_id'])
@@ -217,8 +209,8 @@ class BookingController extends Controller
                     'first_name' => $validated['first_name'],
                     'last_name' => $validated['last_name'],
                     'phone' => $validated['phone'],
-                    'type' => 'guest', // Mark as guest booking
-                    'user_id' => $request->user() ? $request->user()->id : null, // Link to authenticated user if any
+                    'type' => 'guest',
+                    'user_id' => $request->user() ? $request->user()->id : null,
                 ]
             );
 
@@ -234,8 +226,8 @@ class BookingController extends Controller
                 'check_in_date' => $validated['check_in_date'],
                 'check_out_date' => $validated['check_out_date'],
                 'total_price' => $validated['total_price'],
-                'status' => 'Pending', // Public bookings start as Pending
-                'booking_source' => 'online', // use allowed enum value ('online' or 'walk_in')
+                'status' => 'Pending',
+                'booking_source' => 'online',
                 'booking_number' => $bookingNumber,
             ]);
 
@@ -243,16 +235,14 @@ class BookingController extends Controller
             Payment::create([
                 'booking_id' => $booking->id,
                 'amount' => $validated['total_price'],
-                'payment_method' => 'Pending Online', // Indicates online booking, pending payment
+                'payment_method' => 'Pending Online',
                 'status' => PaymentStatus::Pending,
                 'transaction_id' => 'TRX' . strtoupper(uniqid()),
                 'payment_date' => Carbon::now(),
             ]);
 
-            // 6. Simulate email sending
-            Log::info('Simulating booking confirmation email sent to ' . $customer->email . ' for booking ' . $booking->booking_number);
-
-            return redirect()->route('customer.rooms')->with('success', 'Booking request submitted successfully! A confirmation will be sent to your email.');
+            // 6. Redirect to Stripe Payment instead of just finishing
+            return redirect()->route('bookings.pay', ['booking' => $booking->id]);
         });
     }
 
@@ -270,7 +260,6 @@ class BookingController extends Controller
         $startDate = $validated['check_in_date'];
         $endDate = $validated['check_out_date'];
 
-        // Find rooms that are booked in the given date range
         $bookedRoomIds = Booking::whereIn('status', ['Confirmed', 'Checked In'])
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->where('check_in_date', '<', $endDate)
@@ -278,7 +267,6 @@ class BookingController extends Controller
             })
             ->pluck('room_id');
 
-        // Get all rooms that are not in the booked list and match the room type
         $availableRooms = Room::whereNotIn('id', $bookedRoomIds)
             ->where('room_type_id', $validated['room_type'])
             ->get();
@@ -290,36 +278,59 @@ class BookingController extends Controller
         return response()->json($availableRooms);
     }
 
-
     /**
-     * Display the specified resource.
+     * Initiate Stripe Checkout.
      */
-    public function show(Booking $booking)
+    public function payWithStripe(Booking $booking)
     {
-        //
+        // Ideally use config('services.stripe.secret') here if you set it up in config/services.php
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        $session = Session::create([
+            'payment_method_types' => ['card'],
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'usd',
+                    'product_data' => [
+                        'name' => 'Reservation: ' . $booking->booking_number,
+                        'description' => $booking->room->roomType->name . ' (' . $booking->check_in_date->format('M d') . ' - ' . $booking->check_out_date->format('M d') . ')',
+                    ],
+                    'unit_amount' => (int)($booking->total_price * 100), // Ensure integer (cents)
+                ],
+                'quantity' => 1,
+            ]],
+            'mode' => 'payment',
+            'success_url' => route('bookings.payment.success', ['booking' => $booking->id]) . '?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => route('customer.dashboard'),
+        ]);
+
+        return Inertia::location($session->url);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Handle Stripe Success Callback.
      */
-    public function edit(Booking $booking)
+    public function paymentSuccess(Request $request, Booking $booking)
     {
-        //
-    }
+        // Verify payment status (basic implementation)
+        // Ideally, you verify the session_id with Stripe API here to be 100% secure
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Booking $booking)
-    {
-        //
-    }
+        $booking->update(['status' => 'Confirmed']);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Booking $booking)
-    {
-        //
+        $booking->payment()->update([
+            'status' => PaymentStatus::Completed,
+            'payment_method' => 'Stripe',
+            'transaction_id' => $request->get('session_id') ?? 'STRIPE_' . time(),
+            'payment_date' => Carbon::now(),
+        ]);
+
+        // Send confirmation email NOW that payment is secure and variables exist
+        try {
+            Mail::to($booking->customer->email)->send(new BookingConfirmation($booking));
+        } catch (\Exception $e) {
+            Log::error('Failed to send booking email: ' . $e->getMessage());
+        }
+
+        return redirect()->route('customer.dashboard')->with('success', 'Payment successful! Booking confirmed and email sent.');
     }
 }

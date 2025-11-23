@@ -15,27 +15,30 @@ use App\Models\RoomType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BookingController;
 
-Route::get('/', function (Request $request) { // Add Request $request
-    $roomTypes = RoomType::all(); // Fetch all room types
+// In routes/web.php
 
-    $rooms = $roomTypes->map(function ($roomType) {
+Route::get('/', function (Request $request) {
+    // Fetch room types with their calculated or stored rating
+    $rooms = RoomType::all()->map(function ($roomType) {
         return [
             'id' => $roomType->id,
             'name' => $roomType->name,
             'price' => $roomType->price,
-            'image_path' => $roomType->image_path ?? 'https://via.placeholder.com/600x400', // Default image if none
-            'features' => explode(',', $roomType->amenities), // Assuming amenities are comma-separated
-            'rating' => 4.5, // Placeholder rating as it's not in the database
+            // Ensure we use the storage URL if it's a file path, or keep it if it's a full URL
+            'image_path' => $roomType->image_path,
+            'features' => $roomType->amenities ? explode(',', $roomType->amenities) : [],
+            // Use DB rating, fallback to 4.5 if not set yet
+            'rating' => $roomType->rating ?? 4.5,
         ];
-    })->toArray();
+    });
 
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
-        'rooms' => $rooms, // Pass the transformed rooms data
-        'searchParams' => $request->query(), // Pass query parameters as searchParams
+        'rooms' => $rooms,
+        'searchParams' => $request->query(),
     ]);
 })->name('home');
 
@@ -125,4 +128,7 @@ Route::middleware(['auth', 'role:user'])
         Route::get('/settings', [ProfileController::class, 'customerSettings'])->name('settings');
     });
 
+// Payment with stripe
+Route::get('/booking/{booking}/pay', [BookingController::class, 'payWithStripe'])->name('bookings.pay');
+Route::get('/booking/{booking}/success', [BookingController::class, 'paymentSuccess'])->name('bookings.payment.success');
 require __DIR__ . '/auth.php';
