@@ -218,8 +218,17 @@ const PublicBookingModal = ({
                 }, 2000);
             },
             onError: (err) => {
-                console.error("Booking submission failed:", err);
-                alert("Failed to create booking. Please try again.");
+                // Improved error logging
+                console.error(
+                    "Booking submission failed:",
+                    JSON.stringify(err, null, 2)
+                );
+
+                if (err.phone) alert(err.phone);
+                else
+                    alert(
+                        "Failed to create booking. Please check your details."
+                    );
             },
         });
     };
@@ -482,6 +491,7 @@ const PublicBookingModal = ({
                                     onChange={(e) =>
                                         setData("phone", e.target.value)
                                     }
+                                    required
                                     className="mt-1 block w-full"
                                 />
                             </div>
