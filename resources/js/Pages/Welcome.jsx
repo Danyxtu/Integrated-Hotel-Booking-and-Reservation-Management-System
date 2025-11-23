@@ -12,15 +12,15 @@ import {
     Sparkles,
     Clock,
     Award,
-    Baby, // Add Baby icon for children
+    Baby,
 } from "lucide-react";
-import { Link, router, usePage } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
+import PublicBookingModal from "@/Components/PublicBookingModal";
 
-export default function Welcome({ auth, laravelVersion, phpVersion, rooms, searchParams }) {
-    const standardRoom = rooms && rooms.length > 0 ? rooms[0] : null;
-    const signatureRooms = rooms && rooms.length > 1 ? rooms.slice(1, 4) : [];
+export default function Welcome({ rooms, searchParams }) {
     const { props } = usePage();
-    const user = props.auth.user;
+    const user = props.auth?.user || null;
+
     const initialCheckIn = searchParams?.start_date || "";
     const initialCheckOut = searchParams?.end_date || "";
     const initialAdults = searchParams?.adults || 1;
@@ -30,22 +30,19 @@ export default function Welcome({ auth, laravelVersion, phpVersion, rooms, searc
     const [checkOut, setCheckOut] = useState(initialCheckOut);
     const [adults, setAdults] = useState(initialAdults);
     const [children, setChildren] = useState(initialChildren);
+    const [showBookingModal, setShowBookingModal] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
 
-    const handleSearch = () => {
-        router.get(route('rooms.search'), {
-            start_date: checkIn,
-            end_date: checkOut,
-            adults: adults,
-            children: children,
-        });
-    };
+    const standardRoom = rooms && rooms.length > 0 ? rooms[0] : null;
+    const signatureRooms = rooms && rooms.length > 1 ? rooms.slice(1, 4) : [];
 
-    React.useEffect(() => {
+    useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    const handleSearch = () => setShowBookingModal(true);
 
     const features = [
         {
@@ -66,7 +63,12 @@ export default function Welcome({ auth, laravelVersion, phpVersion, rooms, searc
         },
     ];
 
-
+    const getImageSrc = (imagePath) => {
+        if (!imagePath) return "https://via.placeholder.com/600x400";
+        // Check if the path is already a full URL
+        if (imagePath.startsWith("http")) return imagePath;
+        return `/storage/${imagePath}`;
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -78,212 +80,194 @@ export default function Welcome({ auth, laravelVersion, phpVersion, rooms, searc
                         : "bg-transparent"
                 }`}
             >
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                                <Sparkles className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                    LuxStay
-                                </h1>
-                                <p className="text-xs text-gray-500">
-                                    Premium Hospitality
-                                </p>
-                            </div>
+                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                            <Sparkles className="w-6 h-6 text-white" />
                         </div>
-                        <nav className="hidden md:flex items-center gap-8">
-                            <a
-                                href="#rooms"
-                                className="text-gray-700 hover:text-blue-600 transition font-medium"
-                            >
-                                Rooms
-                            </a>
-                            <a
-                                href="#amenities"
-                                className="text-gray-700 hover:text-blue-600 transition font-medium"
-                            >
-                                Amenities
-                            </a>
-                            <a
-                                href="#contact"
-                                className="text-gray-700 hover:text-blue-600 transition font-medium"
-                            >
-                                Contact
-                            </a>
-                            <button className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition transform">
-                                Book Now
-                            </button>
-
-                            {user ? (
-                                <Link
-                                    href={route("customer.dashboard")}
-                                    className="text-gray-700 hover:text-blue-600 transition font-medium"
-                                >
-                                    Dashboard
-                                </Link>
-                            ) : (
-                                <Link href={route("login")}>Login Here</Link>
-                            )}
-                        </nav>
+                        <div>
+                            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                LuxStay
+                            </h1>
+                            <p className="text-xs text-gray-500">
+                                Premium Hospitality
+                            </p>
+                        </div>
                     </div>
+                    <nav className="hidden md:flex items-center gap-8">
+                        <a
+                            href="#rooms"
+                            className="text-gray-700 hover:text-blue-600 font-medium"
+                        >
+                            Rooms
+                        </a>
+                        <a
+                            href="#amenities"
+                            className="text-gray-700 hover:text-blue-600 font-medium"
+                        >
+                            Amenities
+                        </a>
+                        <a
+                            href="#contact"
+                            className="text-gray-700 hover:text-blue-600 font-medium"
+                        >
+                            Contact
+                        </a>
+                        <button className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold hover:shadow-lg hover:scale-105 transition transform">
+                            Book Now
+                        </button>
+                        {user ? (
+                            <Link
+                                href={route("customer.dashboard")}
+                                className="text-gray-700 hover:text-blue-600 font-medium"
+                            >
+                                Dashboard
+                            </Link>
+                        ) : (
+                            <Link href={route("login")}>Login Here</Link>
+                        )}
+                    </nav>
                 </div>
             </header>
 
-            {/* Hero Section */}
+            {/* Hero */}
             <section className="relative pt-32 pb-20 px-6 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-purple-600/5 to-transparent"></div>
-                <div className="max-w-7xl mx-auto relative">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <div className="space-y-8 animate-fade-in">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-full text-blue-700 text-sm font-semibold">
-                                <Award className="w-4 h-4" />
-                                Award-Winning Hotel 2024
-                            </div>
-                            <h2 className="text-5xl lg:text-6xl font-bold leading-tight">
-                                Experience
-                                <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                    Luxury Redefined
-                                </span>
-                            </h2>
-                            <p className="text-xl text-gray-600 leading-relaxed">
-                                Discover unparalleled comfort and elegance in
-                                the heart of paradise. Your perfect getaway
-                                starts here.
-                            </p>
-
-                            {/* Search Box */}
-                            <div className="bg-white rounded-2xl shadow-2xl p-6 space-y-4 border border-gray-100">
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-blue-600" />
-                                            Check-in
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={checkIn}
-                                            onChange={(e) =>
-                                                setCheckIn(e.target.value)
-                                            }
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-blue-600" />
-                                            Check-out
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={checkOut}
-                                            onChange={(e) =>
-                                                setCheckOut(e.target.value)
-                                            }
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                            <Users className="w-4 h-4 text-blue-600" />
-                                            Adults
-                                        </label>
-                                        <select
-                                            value={adults}
-                                            onChange={(e) =>
-                                                setAdults(
-                                                    Number(e.target.value)
-                                                )
-                                            }
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
-                                        >
-                                            {[1, 2, 3, 4, 5, 6].map((num) => (
-                                                <option key={num} value={num}>
-                                                    {num}{" "}
-                                                    {num === 1
-                                                        ? "Adult"
-                                                        : "Adults"}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                            <Baby className="w-4 h-4 text-blue-600" />
-                                            Children
-                                        </label>
-                                        <select
-                                            value={children}
-                                            onChange={(e) =>
-                                                setChildren(
-                                                    Number(e.target.value)
-                                                )
-                                            }
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
-                                        >
-                                            {[0, 1, 2, 3, 4, 5, 6].map(
-                                                (num) => (
-                                                    <option
-                                                        key={num}
-                                                        value={num}
-                                                    >
-                                                        {num}{" "}
-                                                        {num === 1
-                                                            ? "Child"
-                                                            : "Children"}
-                                                    </option>
-                                                )
-                                            )}
-                                        </select>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => handleSearch}
-                                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl hover:scale-105 transition transform flex items-center justify-center gap-2"
-                                >
-                                    <Search className="w-5 h-5" />
-                                    Search Available Rooms
-                                </button>
-                            </div>
+                <div className="max-w-7xl mx-auto relative grid lg:grid-cols-2 gap-12 items-center">
+                    <div className="space-y-8 animate-fade-in">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-full text-blue-700 text-sm font-semibold">
+                            <Award className="w-4 h-4" />
+                            Award-Winning Hotel 2024
                         </div>
+                        <h2 className="text-5xl lg:text-6xl font-bold leading-tight">
+                            Experience{" "}
+                            <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                Luxury Redefined
+                            </span>
+                        </h2>
+                        <p className="text-xl text-gray-600 leading-relaxed">
+                            Discover unparalleled comfort and elegance in the
+                            heart of paradise. Your perfect getaway starts here.
+                        </p>
 
-                        <div className="relative">
-                            <div className="absolute -top-10 -right-10 w-72 h-72 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full blur-3xl opacity-20 animate-pulse"></div>
-                            {standardRoom && (
-                                <>
-                                    <img
-                                        src={standardRoom.image_path}
-                                        alt={standardRoom.name}
-                                        className="relative rounded-3xl shadow-2xl w-full h-[600px] object-cover"
+                        {/* Search Box */}
+                        <div className="bg-white rounded-2xl shadow-2xl p-6 space-y-4 border border-gray-100">
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-blue-600" />
+                                        Check-in
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={checkIn}
+                                        onChange={(e) =>
+                                            setCheckIn(e.target.value)
+                                        }
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
                                     />
-                                    <div className="absolute bottom-8 left-8 right-8 bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="text-sm text-gray-600 mb-1">
-                                                    Starting from
-                                                </p>
-                                                <p className="text-3xl font-bold text-gray-900">
-                                                    ${standardRoom.price}
-                                                    <span className="text-lg text-gray-500">
-                                                        /night
-                                                    </span>
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-1 px-4 py-2 bg-yellow-50 rounded-full">
-                                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                                <span className="font-bold text-gray-900">
-                                                    {standardRoom.rating ||
-                                                        4.9}
+                                </div>
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-blue-600" />
+                                        Check-out
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={checkOut}
+                                        onChange={(e) =>
+                                            setCheckOut(e.target.value)
+                                        }
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                        <Users className="w-4 h-4 text-blue-600" />
+                                        Adults
+                                    </label>
+                                    <select
+                                        value={adults}
+                                        onChange={(e) =>
+                                            setAdults(Number(e.target.value))
+                                        }
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
+                                    >
+                                        {[1, 2, 3, 4, 5, 6].map((num) => (
+                                            <option key={num} value={num}>
+                                                {num}{" "}
+                                                {num === 1 ? "Adult" : "Adults"}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                        <Baby className="w-4 h-4 text-blue-600" />
+                                        Children
+                                    </label>
+                                    <select
+                                        value={children}
+                                        onChange={(e) =>
+                                            setChildren(Number(e.target.value))
+                                        }
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none"
+                                    >
+                                        {[0, 1, 2, 3, 4, 5, 6].map((num) => (
+                                            <option key={num} value={num}>
+                                                {num}{" "}
+                                                {num === 1
+                                                    ? "Child"
+                                                    : "Children"}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleSearch}
+                                className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl hover:scale-105 transition transform flex items-center justify-center gap-2"
+                            >
+                                <Search className="w-5 h-5" />
+                                Search Available Rooms
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="relative">
+                        <div className="absolute -top-10 -right-10 w-72 h-72 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full blur-3xl opacity-20 animate-pulse"></div>
+                        {standardRoom && (
+                            <>
+                                <img
+                                    src={getImageSrc(standardRoom.image_path)}
+                                    alt={standardRoom.name}
+                                    className="relative rounded-3xl shadow-2xl w-full h-[600px] object-cover"
+                                />
+                                <div className="absolute bottom-8 left-8 right-8 bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-sm text-gray-600 mb-1">
+                                                Starting from
+                                            </p>
+                                            <p className="text-3xl font-bold text-gray-900">
+                                                ${standardRoom.price}
+                                                <span className="text-lg text-gray-500">
+                                                    /night
                                                 </span>
-                                            </div>
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-1 px-4 py-2 bg-yellow-50 rounded-full">
+                                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                            <span className="font-bold text-gray-900">
+                                                {standardRoom.rating || 4.9}
+                                            </span>
                                         </div>
                                     </div>
-                                </>
-                            )}
-                        </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </section>
@@ -318,7 +302,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, rooms, searc
                 </div>
             </section>
 
-            {/* Rooms */}
+            {/* Signature Rooms */}
             <section id="rooms" className="py-20 px-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
@@ -337,7 +321,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, rooms, searc
                             >
                                 <div className="relative overflow-hidden h-64">
                                     <img
-                                        src={room.image_path}
+                                        src={getImageSrc(room.image_path)}
                                         alt={room.name}
                                         className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                     />
@@ -353,7 +337,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, rooms, searc
                                         {room.name}
                                     </h4>
                                     <div className="flex gap-2 mb-4 flex-wrap">
-                                        {room.features && room.features.map((feat, i) => (
+                                        {room.features?.map((feat, i) => (
                                             <span
                                                 key={i}
                                                 className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
@@ -385,21 +369,17 @@ export default function Welcome({ auth, laravelVersion, phpVersion, rooms, searc
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-20 px-6 bg-gradient-to-br from-blue-600 to-purple-600">
-                <div className="max-w-4xl mx-auto text-center text-white">
-                    <Clock className="w-16 h-16 mx-auto mb-6" />
-                    <h3 className="text-4xl font-bold mb-6">
-                        Ready for Your Dream Vacation?
-                    </h3>
-                    <p className="text-xl mb-8 text-blue-100">
-                        Book now and save up to 30% on early reservations
-                    </p>
-                    <button className="px-12 py-4 bg-white text-blue-600 rounded-full font-bold text-lg hover:shadow-2xl hover:scale-105 transition transform">
-                        Reserve Your Stay
-                    </button>
-                </div>
-            </section>
+            {/* Booking Modal */}
+            <PublicBookingModal
+                show={showBookingModal}
+                onClose={() => setShowBookingModal(false)}
+                rooms={rooms}
+                checkIn={checkIn}
+                checkOut={checkOut}
+                adults={adults}
+                children={children}
+                auth={props.auth}
+            />
 
             {/* Footer */}
             <footer
@@ -422,8 +402,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, rooms, searc
                         </span>
                     </div>
                     <p className="text-gray-500">
-                        © 2025 LuxStay. Experience luxury redefined | Made with
-                        Laravel Version: {laravelVersion}
+                        © 2025 LuxStay. Experience luxury redefined
                     </p>
                 </div>
             </footer>

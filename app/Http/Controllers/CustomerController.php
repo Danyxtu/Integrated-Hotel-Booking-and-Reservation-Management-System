@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Booking;
+use App\Models\Payment;
+use App\Enums\PaymentStatus; // Add this line
 
 class CustomerController extends Controller
 {
@@ -12,7 +17,58 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        //
+        $user = Auth::user();
+
+        $customer = Customer::where('user_id', $user->id)->first();
+
+        $totalBookings = 0;
+        $upcomingBookings = collect(); // Initialize as an empty collection
+
+        if ($customer) {
+            $totalBookings = Booking::where('customer_id', $customer->id)->count();
+            $upcomingBookings = Booking::where('customer_id', $customer->id)
+                ->where('check_in_date', '>', now())
+                ->orderBy('check_in_date', 'asc')
+                ->get();
+        }
+
+        $upcomingStaysCount = $upcomingBookings->count();
+
+        $pendingPayments = Payment::whereHas('booking.customer', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+            ->where('status', PaymentStatus::Pending)
+            ->sum('amount');
+
+        $recentActivity = Booking::whereHas('customer', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->with('room.roomType', 'hotel') // Eager load relationships for display
+            ->get();
+
+        return Inertia::render('Customer/Dashboard', [
+            'totalBookings' => $totalBookings,
+            'upcomingStaysCount' => $upcomingStaysCount,
+            'pendingPayments' => $pendingPayments,
+            'upcomingReservations' => $upcomingBookings->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'hotel_name' => $booking->room->hotel->name ?? 'N/A',
+                    'room_type_name' => $booking->room->roomType->name ?? 'N/A',
+                    'check_in_date' => $booking->check_in_date->format('M d, Y'),
+                    'check_out_date' => $booking->check_out_date->format('M d, Y'),
+                ];
+            }),
+            'recentActivity' => $recentActivity->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'description' => 'Booked ' . ($booking->room->roomType->name ?? 'Room') . ' at ' . ($booking->room->hotel->name ?? 'N/A'),
+                    'date' => $booking->created_at->diffForHumans(),
+                ];
+            }),
+        ]);
     }
 
     /**

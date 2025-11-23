@@ -41,13 +41,7 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
-            $user = User::where('email', $this->email)->first();
-
-            if ($user && $this->role !== $user->role) {
-            throw ValidationException::withMessages([
-                'email' => 'Invalid Credentials',
-            ]);
-        }
+            // Removed the role-based check here
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());

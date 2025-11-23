@@ -10,6 +10,7 @@ use App\Models\Booking; // Import the Booking model
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class RoomManagementController extends Controller
@@ -21,7 +22,8 @@ class RoomManagementController extends Controller
     {
         //
     }
-    public function showAllRooms(Request $request){
+    public function showAllRooms(Request $request)
+    {
         $filters = $request->only(['status', 'type', 'search']);
 
         $query = Room::query()->with('roomType');
@@ -41,9 +43,9 @@ class RoomManagementController extends Controller
         }
 
         $rooms = $query->get();
-        
+
         $roomTypes = RoomType::all();
-        $roomStatuses = ['Available', 'Occupied', 'Cleaning', 'Maintenance']; 
+        $roomStatuses = ['Available', 'Occupied', 'Cleaning', 'Maintenance'];
 
         return Inertia::render('Admin/RoomManagement/AllRooms', [
             'rooms' => $rooms,
@@ -52,7 +54,8 @@ class RoomManagementController extends Controller
             'filters' => $filters,
         ]);
     }
-    public function showAllRoomTypes(Request $request){
+    public function showAllRoomTypes(Request $request)
+    {
         $roomTypes = RoomType::all();
         if ($request->wantsJson()) {
             return response()->json([
@@ -63,7 +66,8 @@ class RoomManagementController extends Controller
             'roomTypes' => $roomTypes,
         ]);
     }
-    public function showRoomAvailable(Request $request){
+    public function showRoomAvailable(Request $request)
+    {
         $startDate = $request->input('start_date', Carbon::now()->toDateString());
         $endDate = $request->input('end_date', Carbon::now()->addDays(7)->toDateString());
 
@@ -71,11 +75,11 @@ class RoomManagementController extends Controller
         $bookings = Booking::with('room')
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('check_in_date', [$startDate, $endDate])
-                      ->orWhereBetween('check_out_date', [$startDate, $endDate])
-                      ->orWhere(function ($query) use ($startDate, $endDate) {
-                          $query->where('check_in_date', '<', $startDate)
-                                ->where('check_out_date', '>', $endDate);
-                      });
+                    ->orWhereBetween('check_out_date', [$startDate, $endDate])
+                    ->orWhere(function ($query) use ($startDate, $endDate) {
+                        $query->where('check_in_date', '<', $startDate)
+                            ->where('check_out_date', '>', $endDate);
+                    });
             })
             ->get();
 
@@ -125,7 +129,7 @@ class RoomManagementController extends Controller
     public function updateRoomType(Request $request, RoomType $roomType)
     {
         $validated = $request->validate([
-            'name'              => ['required','string','max:255',Rule::unique('room_types')->ignore($roomType->id)],
+            'name'              => ['required', 'string', 'max:255', Rule::unique('room_types')->ignore($roomType->id)],
             'description'       => 'nullable|string',
             'price'             => 'required|numeric|min:0',
             'capacity_adults'   => 'required|integer|min:1',
@@ -192,15 +196,15 @@ class RoomManagementController extends Controller
     {
         //
     }
-
     public function destroyRoomType(Request $request, RoomType $roomType)
     {
         $request->validate([
             'password' => ['required', 'string'],
         ]);
 
-        // Verify password
-        if (!Hash::check($request->password, auth()->user()->password)) {
+        // Verify password and ensure user is authenticated
+        $currentUser = Auth::user();
+        if (!$currentUser || !Hash::check($request->password, $currentUser->password)) {
             return back()->withErrors(['password' => 'Incorrect password.']);
         }
 
@@ -212,7 +216,7 @@ class RoomManagementController extends Controller
         if ($hasBookings) {
             return back()->with('error', 'Cannot delete this room type because it has active bookings.');
         }
-        
+
         // Delete image if it exists
         if ($roomType->image_path) {
             Storage::disk('public')->delete($roomType->image_path);

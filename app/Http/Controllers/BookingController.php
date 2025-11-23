@@ -8,7 +8,6 @@ use App\Models\Customer;
 use App\Models\Room;
 use App\Models\Payment; // Import the Payment model
 use App\Enums\PaymentStatus; // Import the PaymentStatus enum
-use App\Enums\BookingStatus; // Import BookingStatus enum
 use Carbon\Carbon; // Import Carbon for payment_date
 use Inertia\Inertia; // Import Inertia
 use Illuminate\Foundation\Application; // Import Application for version info
@@ -40,7 +39,7 @@ class BookingController extends Controller
         $bookedRoomIds = Booking::whereIn('status', ['Confirmed', 'Checked In'])
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->where('check_in_date', '<', $endDate)
-                      ->where('check_out_date', '>', $startDate);
+                    ->where('check_out_date', '>', $startDate);
             })
             ->pluck('room_id');
 
@@ -71,7 +70,7 @@ class BookingController extends Controller
         $bookedRoomIds = Booking::whereIn('status', ['Confirmed', 'Checked In'])
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->where('check_in_date', '<', $endDate)
-                      ->where('check_out_date', '>', $startDate);
+                    ->where('check_out_date', '>', $startDate);
             })
             ->pluck('room_id');
 
@@ -79,7 +78,7 @@ class BookingController extends Controller
         $availableRooms = Room::whereNotIn('id', $bookedRoomIds)
             ->whereHas('roomType', function ($query) use ($adults, $children) {
                 $query->where('capacity_adults', '>=', $adults)
-                      ->where('capacity_children', '>=', $children);
+                    ->where('capacity_children', '>=', $children);
             })
             ->with('roomType')
             ->get();
@@ -200,7 +199,7 @@ class BookingController extends Controller
         return DB::transaction(function () use ($validated, $request) {
             // 1. Re-check room availability
             $isRoomAvailable = !Booking::where('room_id', $validated['room_id'])
-                ->whereIn('status', [BookingStatus::Confirmed, BookingStatus::CheckedIn])
+                ->whereIn('status', ['Confirmed', 'Checked In'])
                 ->where(function ($query) use ($validated) {
                     $query->where('check_in_date', '<', $validated['check_out_date'])
                         ->where('check_out_date', '>', $validated['check_in_date']);
@@ -235,8 +234,8 @@ class BookingController extends Controller
                 'check_in_date' => $validated['check_in_date'],
                 'check_out_date' => $validated['check_out_date'],
                 'total_price' => $validated['total_price'],
-                'status' => BookingStatus::Pending, // Public bookings start as Pending
-                'booking_source' => 'website',
+                'status' => 'Pending', // Public bookings start as Pending
+                'booking_source' => 'online', // use allowed enum value ('online' or 'walk_in')
                 'booking_number' => $bookingNumber,
             ]);
 

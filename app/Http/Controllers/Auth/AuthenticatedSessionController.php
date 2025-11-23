@@ -31,7 +31,7 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $request->session()->regenerate();
+        $request->session()->regenerate(); // Re-enabled
         
         $user = $request->user();
         if ($user && $user->role === 'admin') {

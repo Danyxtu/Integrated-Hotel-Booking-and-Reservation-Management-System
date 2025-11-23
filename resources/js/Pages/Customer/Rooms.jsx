@@ -89,7 +89,7 @@ const Rooms = () => {
                 return false;
             if (
                 filters.selectedRoomTypes.length > 0 &&
-                !filters.selectedRoomTypes.includes(room.room_type.name)
+                !filters.selectedRoomTypes.includes(room.room_type?.name)
             )
                 return false;
             if (availableRooms !== null && !availableRooms.includes(room.id))
@@ -379,10 +379,16 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
                 <div className="md:w-72 h-56 md:h-auto flex-shrink-0">
                     <img
                         src={
+                            room.image_path ||
                             room.images?.[0] ||
                             "https://via.placeholder.com/300x200"
                         }
-                        alt={room.room_type.name}
+                        alt={
+                            room.room_type?.name ||
+                            room.roomType?.name ||
+                            room.name ||
+                            "Room"
+                        }
                         className="w-full h-full object-cover"
                     />
                 </div>
@@ -394,7 +400,10 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
                         <div className="flex-1 mb-4 lg:mb-0 lg:pr-6">
                             <div className="flex items-start justify-between mb-2">
                                 <h3 className="text-xl font-bold text-gray-900">
-                                    {room.room_type.name}
+                                    {room.room_type?.name ||
+                                        room.roomType?.name ||
+                                        room.name ||
+                                        "Room"}
                                 </h3>
                                 {!isAvailable && (
                                     <span className="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">
@@ -439,7 +448,10 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
 
                             {/* Description */}
                             <p className="text-sm text-gray-600 line-clamp-2">
-                                {room.room_type.description}
+                                {room.room_type?.description ||
+                                    room.roomType?.description ||
+                                    room.description ||
+                                    ""}
                             </p>
                         </div>
 
@@ -509,10 +521,11 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
         if (start < end) totalNights = differenceInDays(end, start);
     }
 
-    const images =
-        room.images && room.images.length > 0
-            ? room.images
-            : ["https://via.placeholder.com/600x400"];
+    const images = room.image_path
+        ? [room.image_path]
+        : room.images && room.images.length > 0
+        ? room.images
+        : ["https://via.placeholder.com/600x400"];
 
     const nextImage = () => {
         setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -530,7 +543,10 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
                     <h2 className="text-2xl font-bold text-gray-900">
-                        {room.room_type.name}
+                        {room.room_type?.name ||
+                            room.roomType?.name ||
+                            room.name ||
+                            "Room"}
                     </h2>
                     <button
                         onClick={onClose}
@@ -547,9 +563,12 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
                             <div className="relative rounded-2xl overflow-hidden bg-gray-100 mb-4">
                                 <img
                                     src={images[currentImageIndex]}
-                                    alt={`${room.room_type.name} ${
-                                        currentImageIndex + 1
-                                    }`}
+                                    alt={`${
+                                        room.room_type?.name ||
+                                        room.roomType?.name ||
+                                        room.name ||
+                                        "Room"
+                                    } ${currentImageIndex + 1}`}
                                     className="w-full h-96 object-cover"
                                 />
 
@@ -620,7 +639,9 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
                         <div className="flex flex-col">
                             <div className="flex-1">
                                 <p className="text-gray-700 mb-6 leading-relaxed">
-                                    {room.room_type.description}
+                                    {room.room_type?.description ||
+                                        room.description ||
+                                        ""}
                                 </p>
 
                                 {/* Room Specs */}
@@ -643,22 +664,6 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
                                             </span>
                                             <p className="font-semibold text-gray-900">
                                                 {room.capacity_children}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-600">
-                                                Room Size:
-                                            </span>
-                                            <p className="font-semibold text-gray-900">
-                                                {room.size} m²
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-600">
-                                                Bed Type:
-                                            </span>
-                                            <p className="font-semibold text-gray-900">
-                                                {room.bed_type}
                                             </p>
                                         </div>
                                     </div>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Hash; // Import Hash facade
 
 test('login screen can be rendered', function () {
     $response = $this->get('/login');
@@ -17,7 +18,7 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
+    $response->assertRedirect(route('customer.dashboard', absolute: false));
 });
 
 test('users can not authenticate with invalid password', function () {
@@ -38,4 +39,12 @@ test('users can logout', function () {
 
     $this->assertGuest();
     $response->assertRedirect('/');
+});
+
+test('password can be manually checked', function () {
+    $user = User::factory()->create(['password' => 'password']);
+    
+    $foundUser = User::where('email', $user->email)->first();
+
+    $this->assertTrue(Hash::check('password', $foundUser->password), 'Password check failed');
 });
