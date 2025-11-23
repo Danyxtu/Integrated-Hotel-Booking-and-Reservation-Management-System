@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Booking; // Import the Booking model
+use App\Models\Booking;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Enums\PaymentStatus;
@@ -18,6 +18,7 @@ class Payment extends Model
         'payment_date',
         'status',
         'payment_method',
+        'transaction_id', // <--- Add this line
     ];
 
     protected $casts = [

@@ -128,7 +128,12 @@ Route::middleware(['auth', 'role:user'])
         Route::get('/settings', [ProfileController::class, 'customerSettings'])->name('settings');
     });
 
-// Payment with stripe
-Route::get('/booking/{booking}/pay', [BookingController::class, 'payWithStripe'])->name('bookings.pay');
+// // Payment with stripe
+// Route::get('/booking/{booking}/pay', [BookingController::class, 'payWithStripe'])->name('bookings.pay');
+// Route::get('/booking/{booking}/success', [BookingController::class, 'paymentSuccess'])->name('bookings.payment.success');
+
+// Payment with Paymongo
+Route::get('/booking/{booking}/pay', [BookingController::class, 'payWithPaymongo'])->name('bookings.pay');
 Route::get('/booking/{booking}/success', [BookingController::class, 'paymentSuccess'])->name('bookings.payment.success');
+
 require __DIR__ . '/auth.php';

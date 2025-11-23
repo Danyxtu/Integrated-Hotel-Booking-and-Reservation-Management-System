@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Payment; // Import the Payment model
 
 class Booking extends Model
 {
@@ -20,16 +21,33 @@ class Booking extends Model
         'booking_source',
         'status',
     ];
+
     protected $casts = [
         'check_in_date' => 'datetime',
         'check_out_date' => 'datetime',
     ];
 
-    public function customer(){
+    /**
+     * Get the customer that owns the booking.
+     */
+    public function customer()
+    {
         return $this->belongsTo(Customer::class);
     }
 
-    public function room(){
+    /**
+     * Get the room associated with the booking.
+     */
+    public function room()
+    {
         return $this->belongsTo(Room::class);
+    }
+
+    /**
+     * Get the payment associated with the booking.
+     */
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
     }
 }

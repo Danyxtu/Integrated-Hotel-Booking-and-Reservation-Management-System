@@ -18,6 +18,8 @@ return new class extends Migration
             $table->decimal('amount', 8, 2);
             $table->dateTime('payment_date');
             $table->string('payment_method');
+            // Add the transaction_id column here
+            $table->string('transaction_id')->nullable();
             $table->string('status')->default(PaymentStatus::Pending);
             $table->timestamps();
         });

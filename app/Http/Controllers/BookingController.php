@@ -15,9 +15,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http; // Import HTTP Facade
 use App\Mail\BookingConfirmation;
-use Stripe\Stripe;
-use Stripe\Checkout\Session;
 
 class BookingController extends Controller
 {
@@ -39,7 +38,6 @@ class BookingController extends Controller
         $startDate = $validated['start_date'];
         $endDate = $validated['end_date'];
 
-        // Find rooms that are booked in the given date range
         $bookedRoomIds = Booking::whereIn('status', ['Confirmed', 'Checked In'])
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->where('check_in_date', '<', $endDate)
@@ -47,15 +45,11 @@ class BookingController extends Controller
             })
             ->pluck('room_id');
 
-        // Get all rooms that are not in the booked list
         $availableRooms = Room::whereNotIn('id', $bookedRoomIds)->with('roomType')->get();
 
         return response()->json($availableRooms);
     }
 
-    /**
-     * Handle public room search.
-     */
     public function search(Request $request)
     {
         $validated = $request->validate([
@@ -70,7 +64,6 @@ class BookingController extends Controller
         $adults = $validated['adults'] ?? 1;
         $children = $validated['children'] ?? 0;
 
-        // Find rooms that are booked in the given date range
         $bookedRoomIds = Booking::whereIn('status', ['Confirmed', 'Checked In'])
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->where('check_in_date', '<', $endDate)
@@ -78,7 +71,6 @@ class BookingController extends Controller
             })
             ->pluck('room_id');
 
-        // Get all rooms that are not in the booked list and match capacity
         $availableRooms = Room::whereNotIn('id', $bookedRoomIds)
             ->whereHas('roomType', function ($query) use ($adults, $children) {
                 $query->where('capacity_adults', '>=', $adults)
@@ -95,7 +87,7 @@ class BookingController extends Controller
                 'price' => $room->roomType->price,
                 'image_path' => $room->roomType->image_path,
                 'features' => explode(',', $room->roomType->amenities),
-                'rating' => $room->roomType->rating ?? 4.5, // Dynamic rating
+                'rating' => $room->roomType->rating ?? 4.5,
             ];
         })->toArray();
 
@@ -114,9 +106,6 @@ class BookingController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage (Admin/Internal).
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -130,12 +119,10 @@ class BookingController extends Controller
             'phone'          => 'required|string|max:20',
         ]);
 
-        // Generate unique booking number
         $lastBooking = Booking::latest('id')->first();
         $number = $lastBooking ? $lastBooking->id + 1 : 1;
         $bookingNumber = 'BK' . str_pad($number, 5, '0', STR_PAD_LEFT);
 
-        // Create walk-in customer
         $customer = Customer::create([
             'first_name' => $validated['first_name'],
             'last_name'  => $validated['last_name'],
@@ -144,7 +131,6 @@ class BookingController extends Controller
             'user_id'    => null,
         ]);
 
-        // Create booking
         $booking = Booking::create([
             'customer_id'    => $customer->id,
             'room_id'        => $validated['room_id'],
@@ -156,7 +142,6 @@ class BookingController extends Controller
             'booking_number' => $bookingNumber,
         ]);
 
-        // Create a corresponding payment record
         Payment::create([
             'booking_id'      => $booking->id,
             'amount'          => $validated['total_price'],
@@ -169,9 +154,6 @@ class BookingController extends Controller
         return redirect()->route('admin.dashboard')->with('success', 'Booking created successfully.');
     }
 
-    /**
-     * Handle public room booking storage.
-     */
     public function storePublic(Request $request)
     {
         Log::info('Received public booking request', $request->all());
@@ -187,9 +169,7 @@ class BookingController extends Controller
             'total_price'    => 'required|numeric|min:0',
         ]);
 
-        // We use a transaction to ensure data integrity
         return DB::transaction(function () use ($validated, $request) {
-            // 1. Re-check room availability
             $isRoomAvailable = !Booking::where('room_id', $validated['room_id'])
                 ->whereIn('status', ['Confirmed', 'Checked In'])
                 ->where(function ($query) use ($validated) {
@@ -202,7 +182,6 @@ class BookingController extends Controller
                 return redirect()->back()->withErrors(['room_id' => 'The selected room is not available for the chosen dates.'])->withInput();
             }
 
-            // 2. Find or create customer
             $customer = Customer::firstOrCreate(
                 ['email' => $validated['email']],
                 [
@@ -214,12 +193,10 @@ class BookingController extends Controller
                 ]
             );
 
-            // 3. Generate unique booking number
             $lastBooking = Booking::latest('id')->first();
             $number = $lastBooking ? $lastBooking->id + 1 : 1;
             $bookingNumber = 'BK' . str_pad($number, 5, '0', STR_PAD_LEFT);
 
-            // 4. Create booking
             $booking = Booking::create([
                 'customer_id' => $customer->id,
                 'room_id' => $validated['room_id'],
@@ -231,17 +208,16 @@ class BookingController extends Controller
                 'booking_number' => $bookingNumber,
             ]);
 
-            // 5. Create a corresponding payment record (Pending for now)
             Payment::create([
                 'booking_id' => $booking->id,
                 'amount' => $validated['total_price'],
                 'payment_method' => 'Pending Online',
                 'status' => PaymentStatus::Pending,
-                'transaction_id' => 'TRX' . strtoupper(uniqid()),
+                'transaction_id' => 'PENDING',
                 'payment_date' => Carbon::now(),
             ]);
 
-            // 6. Redirect to Stripe Payment instead of just finishing
+            // Redirect to PayMongo Payment
             return redirect()->route('bookings.pay', ['booking' => $booking->id]);
         });
     }
@@ -279,58 +255,95 @@ class BookingController extends Controller
     }
 
     /**
-     * Initiate Stripe Checkout.
+     * Initiate PayMongo Checkout.
      */
-    public function payWithStripe(Booking $booking)
+    public function payWithPaymongo(Booking $booking)
     {
-        // Ideally use config('services.stripe.secret') here if you set it up in config/services.php
-        Stripe::setApiKey(env('STRIPE_SECRET'));
+        $response = Http::withBasicAuth(config('services.paymongo.secret_key'), '')
+            ->post('https://api.paymongo.com/v1/checkout_sessions', [
+                'data' => [
+                    'attributes' => [
+                        'line_items' => [[
+                            'name' => 'Reservation: ' . $booking->booking_number,
+                            'amount' => (int)($booking->total_price * 100), // Amount in cents
+                            'currency' => 'PHP', // PayMongo standard currency
+                            'quantity' => 1,
+                            'description' => $booking->room->roomType->name . ' (' . $booking->check_in_date->format('M d') . ' - ' . $booking->check_out_date->format('M d') . ')',
+                        ]],
+                        'payment_method_types' => ['card', 'gcash', 'paymaya', 'grab_pay', 'dob'],
+                        'success_url' => route('bookings.payment.success', ['booking' => $booking->id]),
+                        'cancel_url' => route('customer.dashboard'),
+                        'description' => 'Hotel Reservation ' . $booking->booking_number,
+                    ]
+                ]
+            ]);
 
-        $session = Session::create([
-            'payment_method_types' => ['card'],
-            'line_items' => [[
-                'price_data' => [
-                    'currency' => 'usd',
-                    'product_data' => [
-                        'name' => 'Reservation: ' . $booking->booking_number,
-                        'description' => $booking->room->roomType->name . ' (' . $booking->check_in_date->format('M d') . ' - ' . $booking->check_out_date->format('M d') . ')',
-                    ],
-                    'unit_amount' => (int)($booking->total_price * 100), // Ensure integer (cents)
-                ],
-                'quantity' => 1,
-            ]],
-            'mode' => 'payment',
-            'success_url' => route('bookings.payment.success', ['booking' => $booking->id]) . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('customer.dashboard'),
-        ]);
+        if ($response->successful()) {
+            $data = $response->json()['data'];
+            $checkoutUrl = $data['attributes']['checkout_url'];
+            $checkoutSessionId = $data['id'];
 
-        return Inertia::location($session->url);
+            // Store the Checkout Session ID (cs_...) to verify later
+            $booking->payment()->update([
+                'transaction_id' => $checkoutSessionId
+            ]);
+
+            return Inertia::location($checkoutUrl);
+        }
+
+        Log::error('PayMongo Checkout Creation Failed: ' . $response->body());
+        return redirect()->back()->with('error', 'Unable to initiate payment. Please try again.');
     }
 
     /**
-     * Handle Stripe Success Callback.
+     * Handle PayMongo Success Callback.
      */
     public function paymentSuccess(Request $request, Booking $booking)
     {
-        // Verify payment status (basic implementation)
-        // Ideally, you verify the session_id with Stripe API here to be 100% secure
+        $payment = $booking->payment;
+        $sessionId = $payment->transaction_id; // Retrieved from our DB
 
-        $booking->update(['status' => 'Confirmed']);
-
-        $booking->payment()->update([
-            'status' => PaymentStatus::Completed,
-            'payment_method' => 'Stripe',
-            'transaction_id' => $request->get('session_id') ?? 'STRIPE_' . time(),
-            'payment_date' => Carbon::now(),
-        ]);
-
-        // Send confirmation email NOW that payment is secure and variables exist
-        try {
-            Mail::to($booking->customer->email)->send(new BookingConfirmation($booking));
-        } catch (\Exception $e) {
-            Log::error('Failed to send booking email: ' . $e->getMessage());
+        if (!$sessionId || !str_starts_with($sessionId, 'cs_')) {
+            return redirect()->route('customer.dashboard')->with('error', 'Invalid payment session.');
         }
 
-        return redirect()->route('customer.dashboard')->with('success', 'Payment successful! Booking confirmed and email sent.');
+        // Verify with PayMongo API
+        $response = Http::withBasicAuth(config('services.paymongo.secret_key'), '')
+            ->get('https://api.paymongo.com/v1/checkout_sessions/' . $sessionId);
+
+        if ($response->successful()) {
+            $attributes = $response->json()['data']['attributes'];
+            $payments = $attributes['payments'] ?? [];
+
+            // Check if there is at least one paid payment
+            $isPaid = collect($payments)->contains(function ($p) {
+                return $p['attributes']['status'] === 'paid';
+            });
+
+            if ($isPaid) {
+                $booking->update(['status' => 'Confirmed']);
+
+                // Get the actual payment ID (pay_...)
+                $paymentId = $payments[0]['id'] ?? $sessionId;
+                $paymentMethod = $payments[0]['attributes']['source']['type'] ?? 'PayMongo';
+
+                $payment->update([
+                    'status' => PaymentStatus::Completed,
+                    'payment_method' => ucfirst($paymentMethod),
+                    'transaction_id' => $paymentId,
+                    'payment_date' => Carbon::now(),
+                ]);
+
+                try {
+                    Mail::to($booking->customer->email)->send(new BookingConfirmation($booking));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send booking email: ' . $e->getMessage());
+                }
+
+                return redirect()->route('customer.dashboard')->with('success', 'Payment successful! Booking confirmed.');
+            }
+        }
+
+        return redirect()->route('customer.dashboard')->with('error', 'Payment could not be verified. Please contact support.');
     }
 }
