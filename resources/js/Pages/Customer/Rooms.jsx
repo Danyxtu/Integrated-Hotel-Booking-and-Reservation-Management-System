@@ -1,5 +1,5 @@
 import CustomerLayout from "@/Layouts/CustomerLayout";
-import { Head, usePage } from "@inertiajs/react";
+import { Head, usePage, useForm } from "@inertiajs/react";
 import React, { useState, useMemo, useEffect } from "react";
 import { differenceInDays } from "date-fns";
 import {
@@ -14,6 +14,9 @@ import {
     Search,
     Calendar,
     User,
+    CreditCard,
+    Banknote,
+    CheckCircle,
 } from "lucide-react";
 import Modal from "@/Components/Modal";
 import axios from "axios";
@@ -32,7 +35,6 @@ const Rooms = () => {
     const [availableRooms, setAvailableRooms] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    // Simplified state: Only keeping what is necessary for booking
     const [filters, setFilters] = useState({
         startDate: "",
         endDate: "",
@@ -71,7 +73,6 @@ const Rooms = () => {
             return [];
         }
         return rooms.filter((room) => {
-            // Only filter by capacity and availability
             if (
                 room.capacity_adults < filters.adults ||
                 room.capacity_children < filters.children
@@ -89,7 +90,7 @@ const Rooms = () => {
         <CustomerLayout>
             <Head title="Browse Rooms" />
 
-            {/* Hero Section with Integrated Booking Controls */}
+            {/* Hero Section */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 mb-8 shadow-lg">
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-white mb-2">
@@ -101,7 +102,7 @@ const Rooms = () => {
                     </p>
                 </div>
 
-                {/* Top Bar Controls (Replaces Sidebar) */}
+                {/* Top Bar Controls */}
                 <div className="bg-white p-2 rounded-xl shadow-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
                     {/* Start Date */}
                     <div className="relative">
@@ -173,7 +174,7 @@ const Rooms = () => {
                 </div>
             </div>
 
-            {/* Main Content - Full Width */}
+            {/* Main Content */}
             <main>
                 <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-gray-800">
@@ -393,8 +394,10 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
 };
 
 const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
+    const { auth } = usePage().props;
     const { startDate, endDate } = filters;
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [step, setStep] = useState(1); // 1: Details, 2: Payment
 
     let totalNights = 0;
     if (startDate && endDate) {
@@ -402,6 +405,20 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
         const end = new Date(endDate);
         if (start < end) totalNights = differenceInDays(end, start);
     }
+    console.log(auth.user.first_name);
+    console.log(auth.user.last_name);
+    // Initialize form
+    const { data, setData, post, processing, errors } = useForm({
+        first_name: auth?.user?.first_name || "",
+        last_name: auth?.user?.last_name || "",
+        email: auth?.user?.email || "",
+        phone: auth?.user?.phone || "0000000000",
+        room_id: room.id,
+        check_in_date: startDate,
+        check_out_date: endDate,
+        total_price: (room.price || 0) * totalNights,
+        payment_method: "", // User will select this in step 2
+    });
 
     const images = room.image_path
         ? [getImageSrc(room.image_path)]
@@ -419,16 +436,34 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
         );
     };
 
+    const handlePaymentSelect = (method) => {
+        setData("payment_method", method);
+    };
+
+    const handleConfirmBooking = () => {
+        if (!data.payment_method) {
+            alert("Please select a payment method.");
+            return;
+        }
+
+        post(route("bookings.public.store"), {
+            onSuccess: () => {
+                onClose();
+            },
+            onError: (err) => {
+                console.error("Booking failed", err);
+                alert("Failed to book room. Please check your details.");
+            },
+        });
+    };
+
     return (
         <Modal show={true} onClose={onClose} maxWidth="5xl">
             <div className="relative max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
                     <h2 className="text-2xl font-bold text-gray-900">
-                        {room.room_type?.name ||
-                            room.roomType?.name ||
-                            room.name ||
-                            "Room"}
+                        {step === 1 ? "Room Details" : "Select Payment Method"}
                     </h2>
                     <button
                         onClick={onClose}
@@ -439,216 +474,169 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
                 </div>
 
                 <div className="p-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Image Carousel */}
-                        <div>
-                            <div className="relative rounded-2xl overflow-hidden bg-gray-100 mb-4">
-                                <img
-                                    src={images[currentImageIndex]}
-                                    alt={`${
-                                        room.room_type?.name ||
-                                        room.roomType?.name ||
-                                        room.name ||
-                                        "Room"
-                                    } ${currentImageIndex + 1}`}
-                                    className="w-full h-96 object-cover"
-                                />
-
-                                {images.length > 1 && (
-                                    <>
-                                        <button
-                                            onClick={prevImage}
-                                            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition"
-                                        >
-                                            <ChevronLeft className="w-5 h-5 text-gray-700" />
-                                        </button>
-                                        <button
-                                            onClick={nextImage}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition"
-                                        >
-                                            <ChevronRight className="w-5 h-5 text-gray-700" />
-                                        </button>
-
-                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                                            {images.map((_, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() =>
-                                                        setCurrentImageIndex(
-                                                            idx
-                                                        )
-                                                    }
-                                                    className={`w-2 h-2 rounded-full transition ${
-                                                        idx ===
-                                                        currentImageIndex
-                                                            ? "bg-white w-6"
-                                                            : "bg-white/50"
-                                                    }`}
-                                                />
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Thumbnail Grid */}
-                            {images.length > 1 && (
-                                <div className="grid grid-cols-4 gap-2">
-                                    {images.slice(0, 4).map((img, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() =>
-                                                setCurrentImageIndex(idx)
-                                            }
-                                            className={`relative rounded-lg overflow-hidden border-2 transition ${
-                                                idx === currentImageIndex
-                                                    ? "border-blue-600"
-                                                    : "border-transparent"
-                                            }`}
-                                        >
-                                            <img
-                                                src={img}
-                                                alt={`Thumbnail ${idx + 1}`}
-                                                className="w-full h-20 object-cover"
-                                            />
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Room Details */}
-                        <div className="flex flex-col">
-                            <div className="flex-1">
-                                <p className="text-gray-700 mb-6 leading-relaxed">
-                                    {room.room_type?.description ||
-                                        room.description ||
-                                        ""}
-                                </p>
-
-                                {/* Room Specs */}
-                                <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                                    <h4 className="font-bold text-gray-900 mb-3">
-                                        Room Specifications
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                            <span className="text-gray-600">
-                                                Max Adults:
-                                            </span>
-                                            <p className="font-semibold text-gray-900">
-                                                {room.capacity_adults}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-600">
-                                                Max Children:
-                                            </span>
-                                            <p className="font-semibold text-gray-900">
-                                                {room.capacity_children}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Amenities */}
-                                <div className="mb-6">
-                                    <h4 className="font-bold text-gray-900 mb-3">
-                                        Amenities
-                                    </h4>
-                                    <div className="flex flex-wrap gap-2">
-                                        {room.amenities?.map((amenity) => (
-                                            <span
-                                                key={amenity}
-                                                className="bg-blue-50 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium"
+                    {step === 1 && (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {/* Image Carousel */}
+                            <div>
+                                <div className="relative rounded-2xl overflow-hidden bg-gray-100 mb-4">
+                                    <img
+                                        src={images[currentImageIndex]}
+                                        alt="Room"
+                                        className="w-full h-96 object-cover"
+                                    />
+                                    {images.length > 1 && (
+                                        <>
+                                            <button
+                                                onClick={prevImage}
+                                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow-lg"
                                             >
-                                                {amenity}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Policies */}
-                                <div className="mb-6">
-                                    <h4 className="font-bold text-gray-900 mb-3">
-                                        Booking Policies
-                                    </h4>
-                                    <ul className="space-y-2 text-sm text-gray-700">
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-green-600 mt-0.5">
-                                                ✓
-                                            </span>
-                                            <span>
-                                                Free cancellation until 24 hours
-                                                before check-in
-                                            </span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-blue-600 mt-0.5">
-                                                •
-                                            </span>
-                                            <span>Check-in time: 3:00 PM</span>
-                                        </li>
-                                        <li className="flex items-start gap-2">
-                                            <span className="text-blue-600 mt-0.5">
-                                                •
-                                            </span>
-                                            <span>
-                                                Check-out time: 11:00 AM
-                                            </span>
-                                        </li>
-                                    </ul>
+                                                <ChevronLeft className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={nextImage}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 p-2 rounded-full shadow-lg"
+                                            >
+                                                <ChevronRight className="w-5 h-5" />
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Booking Section */}
-                            <div className="border-t pt-6">
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-4">
-                                    <div className="flex items-baseline justify-between mb-2">
-                                        <div>
-                                            <span className="text-3xl font-bold text-gray-900">
-                                                ${room.price}
+                            {/* Room Details */}
+                            <div className="flex flex-col">
+                                <div className="flex-1">
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                                        {room.room_type?.name || room.name}
+                                    </h3>
+                                    <p className="text-gray-700 mb-6">
+                                        {room.room_type?.description ||
+                                            room.description}
+                                    </p>
+
+                                    <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                                        <h4 className="font-bold text-gray-900 mb-3">
+                                            Booking Summary
+                                        </h4>
+                                        <div className="flex justify-between text-sm mb-2">
+                                            <span>Check-in:</span>{" "}
+                                            <span className="font-semibold">
+                                                {startDate}
                                             </span>
-                                            <span className="text-gray-600 ml-2">
-                                                per night
+                                        </div>
+                                        <div className="flex justify-between text-sm mb-2">
+                                            <span>Check-out:</span>{" "}
+                                            <span className="font-semibold">
+                                                {endDate}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-sm mb-2">
+                                            <span>Nights:</span>{" "}
+                                            <span className="font-semibold">
+                                                {totalNights}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
+                                            <span>Total:</span>{" "}
+                                            <span className="text-blue-600">
+                                                ${data.total_price.toFixed(2)}
                                             </span>
                                         </div>
                                     </div>
-                                    {totalNights > 0 && (
-                                        <div className="flex justify-between items-center pt-3 border-t border-blue-200">
-                                            <span className="text-sm text-gray-700">
-                                                Total for {totalNights} night
-                                                {totalNights > 1 ? "s" : ""}
-                                            </span>
-                                            <span className="text-2xl font-bold text-blue-900">
-                                                $
-                                                {(
-                                                    room.price * totalNights
-                                                ).toFixed(2)}
-                                            </span>
-                                        </div>
+                                </div>
+
+                                <div className="border-t pt-6">
+                                    <button
+                                        onClick={() => setStep(2)}
+                                        className="w-full bg-blue-600 text-white font-bold py-4 px-6 rounded-xl hover:bg-blue-700 transition shadow-lg"
+                                    >
+                                        Proceed to Payment
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 2 && (
+                        <div className="max-w-2xl mx-auto">
+                            <div className="mb-8 space-y-4">
+                                <div
+                                    onClick={() =>
+                                        handlePaymentSelect("pay_now")
+                                    }
+                                    className={`p-6 rounded-xl border-2 cursor-pointer transition flex items-center gap-4 ${
+                                        data.payment_method === "pay_now"
+                                            ? "border-blue-600 bg-blue-50"
+                                            : "border-gray-200 hover:border-blue-300"
+                                    }`}
+                                >
+                                    <div className="p-3 bg-blue-100 rounded-full text-blue-600">
+                                        <CreditCard className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-gray-900">
+                                            Pay Online Now
+                                        </h4>
+                                        secret_key{" "}
+                                        <p className="text-sm text-gray-600">
+                                            Secure payment via Credit Card,
+                                            GCash, or PayMaya.
+                                        </p>
+                                    </div>
+                                    {data.payment_method === "pay_now" && (
+                                        <CheckCircle className="w-6 h-6 text-blue-600 ml-auto" />
                                     )}
                                 </div>
 
-                                <button
-                                    className={`w-full font-bold py-4 px-6 rounded-xl transition text-lg ${
-                                        isAvailable && startDate && endDate
-                                            ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
-                                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    }`}
-                                    disabled={
-                                        !isAvailable || !startDate || !endDate
+                                <div
+                                    onClick={() =>
+                                        handlePaymentSelect("pay_later")
                                     }
+                                    className={`p-6 rounded-xl border-2 cursor-pointer transition flex items-center gap-4 ${
+                                        data.payment_method === "pay_later"
+                                            ? "border-green-600 bg-green-50"
+                                            : "border-gray-200 hover:border-green-300"
+                                    }`}
                                 >
-                                    {startDate && endDate
-                                        ? isAvailable
-                                            ? "Confirm Booking"
-                                            : "Not Available"
-                                        : "Select Dates to Book"}
+                                    <div className="p-3 bg-green-100 rounded-full text-green-600">
+                                        <Banknote className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-gray-900">
+                                            Pay Upon Arrival
+                                        </h4>
+                                        <p className="text-sm text-gray-600">
+                                            Reserve your room now and pay at the
+                                            hotel front desk.
+                                        </p>
+                                    </div>
+                                    {data.payment_method === "pay_later" && (
+                                        <CheckCircle className="w-6 h-6 text-green-600 ml-auto" />
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => setStep(1)}
+                                    className="w-1/3 bg-gray-100 text-gray-700 font-bold py-4 px-6 rounded-xl hover:bg-gray-200 transition"
+                                >
+                                    Back
+                                </button>
+                                <button
+                                    onClick={handleConfirmBooking}
+                                    disabled={
+                                        processing || !data.payment_method
+                                    }
+                                    className="w-2/3 bg-blue-600 text-white font-bold py-4 px-6 rounded-xl hover:bg-blue-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {processing
+                                        ? "Processing..."
+                                        : "Confirm & Book"}
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </Modal>

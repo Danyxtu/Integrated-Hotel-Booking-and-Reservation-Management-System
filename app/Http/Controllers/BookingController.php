@@ -167,6 +167,7 @@ class BookingController extends Controller
             'check_in_date'  => 'required|date|after_or_equal:today',
             'check_out_date' => 'required|date|after:check_in_date',
             'total_price'    => 'required|numeric|min:0',
+            'payment_method' => 'nullable|string' // Added payment_method validation
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
@@ -197,13 +198,16 @@ class BookingController extends Controller
             $number = $lastBooking ? $lastBooking->id + 1 : 1;
             $bookingNumber = 'BK' . str_pad($number, 5, '0', STR_PAD_LEFT);
 
+            // Determine initial status based on payment method
+            $initialStatus = ($request->payment_method === 'pay_later') ? 'Confirmed' : 'Pending';
+
             $booking = Booking::create([
                 'customer_id' => $customer->id,
                 'room_id' => $validated['room_id'],
                 'check_in_date' => $validated['check_in_date'],
                 'check_out_date' => $validated['check_out_date'],
                 'total_price' => $validated['total_price'],
-                'status' => 'Pending',
+                'status' => $initialStatus,
                 'booking_source' => 'online',
                 'booking_number' => $bookingNumber,
             ]);
@@ -211,13 +215,24 @@ class BookingController extends Controller
             Payment::create([
                 'booking_id' => $booking->id,
                 'amount' => $validated['total_price'],
-                'payment_method' => 'Pending Online',
+                'payment_method' => $request->payment_method === 'pay_later' ? 'Pay Later' : 'Pending Online',
                 'status' => PaymentStatus::Pending,
                 'transaction_id' => 'PENDING',
                 'payment_date' => Carbon::now(),
             ]);
 
-            // Redirect to PayMongo Payment
+            // Handle Pay Later Logic
+            if ($request->payment_method === 'pay_later') {
+                try {
+                    Mail::to($customer->email)->send(new BookingConfirmation($booking));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send booking email: ' . $e->getMessage());
+                }
+
+                return redirect()->route('customer.reservations')->with('success', 'Booking confirmed! Please pay upon arrival.');
+            }
+
+            // Redirect to PayMongo Payment for online payments
             return redirect()->route('bookings.pay', ['booking' => $booking->id]);
         });
     }

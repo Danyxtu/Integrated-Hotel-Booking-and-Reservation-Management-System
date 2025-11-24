@@ -14,7 +14,8 @@
         <li><strong>Room:</strong> {{ $booking->room->roomType->name }}</li>
         <li><strong>Check-in:</strong> {{ $booking->check_in_date->format('M d, Y') }}</li>
         <li><strong>Check-out:</strong> {{ $booking->check_out_date->format('M d, Y') }}</li>
-        <li><strong>Total Price:</strong> ${{ number_format($booking->total_price, 2) }}</li>
+        <li><strong>Total Price:</strong> ₱{{ number_format($booking->total_price, 2) }}</li>
+        <li><strong>Status :</strong> Paid</li>
     </ul>
 
     <p>We look forward to hosting you!</p>

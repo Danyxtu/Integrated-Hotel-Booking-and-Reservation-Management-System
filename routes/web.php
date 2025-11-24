@@ -14,8 +14,7 @@ use App\Http\Controllers\RoomController;
 use App\Models\RoomType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BookingController;
-
-// In routes/web.php
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function (Request $request) {
     // Fetch room types with their calculated or stored rating
@@ -43,14 +42,12 @@ Route::get('/', function (Request $request) {
 })->name('home');
 
 // Public Booking and Room Search
-Route::get('/search-rooms', [\App\Http\Controllers\BookingController::class, 'search'])->name('rooms.search');
-Route::post('/book-room', [\App\Http\Controllers\BookingController::class, 'storePublic'])->name('bookings.public.store');
-Route::post('/api/check-availability', [\App\Http\Controllers\BookingController::class, 'checkAvailability'])->name('bookings.checkAvailability');
-Route::post('/api/store-booking', [\App\Http\Controllers\BookingController::class, 'storePublic'])->name('bookings.store');
+Route::get('/search-rooms', [BookingController::class, 'search'])->name('rooms.search');
+Route::post('/book-room', [BookingController::class, 'storePublic'])->name('bookings.public.store');
+Route::post('/api/check-availability', [BookingController::class, 'checkAvailability'])->name('bookings.checkAvailability');
+Route::post('/api/store-booking', [BookingController::class, 'storePublic'])->name('bookings.store');
 
 
-// Use Auth facade for role-based redirection
-use Illuminate\Support\Facades\Auth;
 
 Route::get('/dashboard', function () {
     if (Auth::user()->role === 'admin') {
@@ -124,7 +121,7 @@ Route::middleware(['auth', 'role:user'])
             return Inertia::render('Customer/Reservations');
         })->name('reservations');
         Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
-        Route::post('/rooms/check-availability', [\App\Http\Controllers\BookingController::class, 'checkAvailability'])->name('rooms.checkAvailability');
+        Route::post('/rooms/check-availability', [BookingController::class, 'checkAvailability'])->name('rooms.checkAvailability');
         Route::get('/settings', [ProfileController::class, 'customerSettings'])->name('settings');
     });
 
