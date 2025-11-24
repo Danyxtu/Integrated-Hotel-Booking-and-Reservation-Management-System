@@ -74,7 +74,10 @@ class PaymentController extends Controller
     }
     public function showAllRefunds(){
         // You might want to fetch and pass refunded payments here in the future
-        return Inertia::render('Admin/Payments/Refunds');
+        $payments = Payment::with('booking.customer')->where('status', PaymentStatus::Refunded)->latest()->get();
+        return Inertia::render('Admin/Payments/Refunds',[
+            'payments' => $payments
+        ]);
     }
 
     public function updateStatus(Request $request, Payment $payment)

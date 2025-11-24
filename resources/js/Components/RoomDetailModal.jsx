@@ -1,3 +1,26 @@
+import React, { useState } from "react";
+import { usePage, useForm } from "@inertiajs/react";
+import { differenceInDays } from "date-fns";
+import {
+    X,
+    ChevronLeft,
+    ChevronRight,
+    CreditCard,
+    Banknote,
+    CheckCircle,
+} from "lucide-react";
+import Modal from "@/Components/Modal";
+
+const getImageSrc = (imagePath) => {
+    if (!imagePath)
+        return "https://via.placeholder.com/600x400?text=LuxStay+Room";
+    if (typeof imagePath === "string" && imagePath.startsWith("http"))
+        return imagePath;
+    return `/storage/${String(imagePath || "")
+        .replace(/^\/?storage\//, "")
+        .replace(/^\/+/, "")}`;
+};
+
 const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
     const { auth } = usePage().props;
     const { startDate, endDate } = filters;

@@ -42,14 +42,6 @@ const AdminLayout = ({ children }) => {
                     name: "All Bookings",
                     path: "admin.reservations.all-bookings",
                 },
-                {
-                    name: "Check-ins Today",
-                    path: "admin.reservations.check-ins",
-                },
-                {
-                    name: "Check-outs Today",
-                    path: "admin.reservations.check-outs",
-                },
                 { name: "Pending", path: "admin.reservations.pending" },
                 { name: "Walk-in", path: "admin.bookings.walkin" },
             ],
@@ -260,7 +252,8 @@ const AdminLayout = ({ children }) => {
                     <div className="p-4 border-t">
                         <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                             <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                {user.first_name ? user.first_name[0] : ''}{user.last_name ? user.last_name[0] : ''}
+                                {user.first_name ? user.first_name[0] : ""}
+                                {user.last_name ? user.last_name[0] : ""}
                             </div>
                             <div className="flex-1">
                                 <p className="font-semibold text-sm text-gray-900">
@@ -301,23 +294,10 @@ const AdminLayout = ({ children }) => {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl w-64">
-                                <Search className="w-5 h-5 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    className="bg-transparent outline-none w-full text-sm"
-                                />
-                            </div>
-
-                            <button className="relative p-2 hover:bg-gray-100 rounded-xl">
-                                <Bell className="w-6 h-6 text-gray-600" />
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full"></span>
-                            </button>
-
                             <button className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 rounded-xl">
                                 <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                    {user.first_name ? user.first_name[0] : ''}{user.last_name ? user.last_name[0] : ''}
+                                    {user.first_name ? user.first_name[0] : ""}
+                                    {user.last_name ? user.last_name[0] : ""}
                                 </div>
                                 <div className="hidden md:block text-left">
                                     <p className="text-sm font-semibold text-gray-900">

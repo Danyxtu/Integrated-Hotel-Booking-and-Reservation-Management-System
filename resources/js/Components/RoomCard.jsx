@@ -1,3 +1,17 @@
+import React from "react";
+import { differenceInDays } from "date-fns";
+import { Wifi, Wind, Bed, Users, Star } from "lucide-react";
+
+const getImageSrc = (imagePath) => {
+    if (!imagePath)
+        return "https://via.placeholder.com/400x300?text=LuxStay+Room";
+    if (typeof imagePath === "string" && imagePath.startsWith("http"))
+        return imagePath;
+    return `/storage/${String(imagePath || "")
+        .replace(/^\/?storage\//, "")
+        .replace(/^\/+/, "")}`;
+};
+
 const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
     const { startDate, endDate } = filters;
     let totalNights = 0;

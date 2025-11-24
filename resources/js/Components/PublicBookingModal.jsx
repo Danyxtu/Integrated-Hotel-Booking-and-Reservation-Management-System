@@ -5,8 +5,9 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
-import { useForm, router } from "@inertiajs/react";
-import { CreditCard, Clock, CheckCircle } from "lucide-react";
+import { useForm } from "@inertiajs/react";
+import { CreditCard, Clock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const PublicBookingModal = ({
     show,
@@ -18,11 +19,11 @@ const PublicBookingModal = ({
     children,
     auth,
 }) => {
+    const { toast } = useToast();
     const [step, setStep] = useState(1);
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [serverRooms, setServerRooms] = useState(null);
     const [loadingAvailability, setLoadingAvailability] = useState(false);
-    const [processingPayment, setProcessingPayment] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -35,7 +36,7 @@ const PublicBookingModal = ({
         check_out_date: checkOut || "",
         total_price: 0,
         status: "Pending",
-        payment_method: "",
+        payment_method: "pay_later",
     });
 
     useEffect(() => {
@@ -43,7 +44,6 @@ const PublicBookingModal = ({
         if (show) {
             setData("check_in_date", checkIn || "");
             setData("check_out_date", checkOut || "");
-            // Fetch server-validated availability when modal opens and dates are present
             if (
                 (checkIn || data.check_in_date) &&
                 (checkOut || data.check_out_date)
@@ -127,6 +127,13 @@ const PublicBookingModal = ({
         });
     }, [rooms, adults, children]);
 
+    const getImageSrc = (imagePath) => {
+        if (!imagePath)
+            return "https://via.placeholder.com/400x250?text=LuxStay+Room";
+        if (imagePath.startsWith("http")) return imagePath;
+        return `/storage/${imagePath.replace(/^\/?storage\//, "")}`;
+    };
+
     const selectRoom = (room) => {
         setSelectedRoom(room);
         setData("room_id", room.id);
@@ -151,44 +158,25 @@ const PublicBookingModal = ({
 
     const handlePaymentChoice = (method) => {
         setPaymentMethod(method);
-        if (method === "now") {
-            setStep(5); // GCash payment simulation
-        } else {
-            // Pay later - skip to booking confirmation
-            submitBooking(null, "later");
+
+        if (method === "gcash") {
+            submitBooking(null, "gcash");
+            return;
         }
-    };
 
-    const handleGCashPayment = async () => {
-        setProcessingPayment(true);
-        try {
-            // Simulate GCash payment processing
-            console.log("🔄 Processing GCash payment...");
-            console.log(`Amount: ₱${data.total_price}`);
-
-            // Simulate payment delay
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            // Payment successful
-            console.log("✅ GCash Payment Successful!");
-            console.log(
-                "Transaction ID: GCASH-" +
-                    Math.random().toString(36).substr(2, 9).toUpperCase()
-            );
-
-            setData("payment_method", "gcash");
-            // Proceed to booking with payment confirmation
-            submitBooking(null, "now");
-        } catch (err) {
-            console.error("❌ Payment failed:", err);
-            alert("Payment processing failed. Please try again.");
-        } finally {
-            setProcessingPayment(false);
+        if (method === "pay_later") {
+            submitBooking(null, "pay_later");
         }
     };
 
     const submitBooking = (e, method = null) => {
         if (e) e.preventDefault();
+
+        const chosenMethod = method || paymentMethod;
+        if (!chosenMethod) {
+            alert("Please select a payment method.");
+            return;
+        }
 
         const bookingData = {
             first_name: data.first_name,
@@ -200,64 +188,38 @@ const PublicBookingModal = ({
             check_out_date: data.check_out_date,
             total_price: data.total_price,
             status: "Pending",
-            payment_method: method || paymentMethod,
         };
+        setData("payment_method", chosenMethod);
 
-        post(route("bookings.store"), {
+        post(route("bookings.public.store"), {
             data: bookingData,
-            onSuccess: (page) => {
-                // Send email simulation
-                sendBookingConfirmationEmail(bookingData);
+            onSuccess: () => {
+                if (chosenMethod === "pay_later") {
+                    toast({
+                        title: "Reservation Email Sent",
+                        description: `We emailed the booking details to ${bookingData.email}.`,
+                    });
 
-                // Close modal after successful booking
-                setTimeout(() => {
-                    onClose();
-                    setStep(1);
-                    setSelectedRoom(null);
-                    setPaymentMethod(null);
-                }, 2000);
+                    setTimeout(() => {
+                        onClose();
+                        setStep(1);
+                        setSelectedRoom(null);
+                        setPaymentMethod(null);
+                    }, 2000);
+                }
             },
             onError: (err) => {
-                // Improved error logging
-                console.error(
-                    "Booking submission failed:",
-                    JSON.stringify(err, null, 2)
-                );
-
-                if (err.phone) alert(err.phone);
-                else
-                    alert(
-                        "Failed to create booking. Please check your details."
-                    );
+                console.error("Booking submission failed:", err);
+                alert("Failed to create booking. Please check your details.");
             },
         });
-    };
-
-    const sendBookingConfirmationEmail = (bookingData) => {
-        console.log("\n📧 ========== EMAIL SIMULATION ==========");
-        console.log("TO:", bookingData.email);
-        console.log("SUBJECT: Booking Confirmation - " + bookingData.room_id);
-        console.log("---");
-        console.log(
-            "Dear " + bookingData.first_name + " " + bookingData.last_name + ","
-        );
-        console.log("\nThank you for your booking!");
-        console.log("Check-in: " + bookingData.check_in_date);
-        console.log("Check-out: " + bookingData.check_out_date);
-        console.log("Total Price: ₱" + bookingData.total_price);
-        console.log(
-            "Payment Method: " +
-                (bookingData.payment_method === "gcash" ? "GCash" : "Pay Later")
-        );
-        console.log("\nWe look forward to your stay!");
-        console.log("=========================================\n");
     };
 
     return (
         <Modal show={show} onClose={onClose} maxWidth="2xl">
             <div className="p-6">
                 <h2 className="text-xl font-semibold mb-4">
-                    Book a Room — Step {step} of 5
+                    Book a Room — Step {step} of 4
                 </h2>
 
                 {step === 1 && (
@@ -299,8 +261,19 @@ const PublicBookingModal = ({
                             {(displayedRooms || []).map((room) => (
                                 <div
                                     key={room.id}
-                                    className="p-4 border rounded flex items-center justify-between"
+                                    className="p-4 border rounded flex items-center gap-4 hover:border-blue-200 transition"
                                 >
+                                    <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                                        <img
+                                            src={getImageSrc(room.image_path)}
+                                            alt={room.name}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.src =
+                                                    "https://via.placeholder.com/120x120?text=LuxStay";
+                                            }}
+                                        />
+                                    </div>
                                     <div>
                                         <div className="font-semibold">
                                             {room.name}
@@ -332,7 +305,7 @@ const PublicBookingModal = ({
                     <div className="space-y-4">
                         <div className="bg-gray-100 rounded-lg overflow-hidden h-80">
                             <img
-                                src={selectedRoom.image_path}
+                                src={getImageSrc(selectedRoom.image_path)}
                                 alt={selectedRoom.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
@@ -539,7 +512,7 @@ const PublicBookingModal = ({
                                     payment processing.
                                 </p>
                                 <PrimaryButton
-                                    onClick={() => handlePaymentChoice("now")}
+                                    onClick={() => submitBooking(null, "gcash")}
                                     className="w-full"
                                 >
                                     Pay Now with GCash
@@ -556,7 +529,9 @@ const PublicBookingModal = ({
                                     online.
                                 </p>
                                 <SecondaryButton
-                                    onClick={() => handlePaymentChoice("later")}
+                                    onClick={() =>
+                                        submitBooking(null, "pay_later")
+                                    }
                                     className="w-full"
                                 >
                                     Reserve Now
@@ -569,94 +544,6 @@ const PublicBookingModal = ({
                                 Back to Guest Info
                             </SecondaryButton>
                         </div>
-                    </div>
-                )}
-
-                {/* Step 5: Payment Processing (GCash) */}
-                {step === 5 && (
-                    <div className="space-y-6">
-                        <div className="bg-yellow-50 border-2 border-yellow-300 p-6 rounded-lg text-center">
-                            <CreditCard className="w-16 h-16 mx-auto text-yellow-600 mb-4" />
-                            <h3 className="text-xl font-bold mb-2">
-                                GCash Payment
-                            </h3>
-                            <p className="text-3xl font-bold text-green-600 mb-2">
-                                ₱{data.total_price}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                                Complete your payment to confirm your booking
-                            </p>
-                        </div>
-
-                        <div className="bg-blue-50 p-4 rounded-lg space-y-3">
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700">
-                                    GCash Account Number
-                                </label>
-                                <TextInput
-                                    type="text"
-                                    placeholder="09XX XXX XXXX"
-                                    className="mt-1 block w-full"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700">
-                                    Account Holder Name
-                                </label>
-                                <TextInput
-                                    type="text"
-                                    placeholder="Full Name"
-                                    className="mt-1 block w-full"
-                                />
-                            </div>
-                            <p className="text-xs text-gray-500 italic">
-                                ⚠️ This is a simulation. In production, this
-                                would redirect to GCash payment gateway.
-                            </p>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <SecondaryButton
-                                onClick={() => setStep(4)}
-                                disabled={processingPayment}
-                                className="flex-1"
-                            >
-                                Back
-                            </SecondaryButton>
-                            <PrimaryButton
-                                onClick={handleGCashPayment}
-                                disabled={processingPayment}
-                                className="flex-1"
-                            >
-                                {processingPayment
-                                    ? "Processing..."
-                                    : "Confirm Payment"}
-                            </PrimaryButton>
-                        </div>
-                    </div>
-                )}
-
-                {/* Success Message */}
-                {step > 5 && (
-                    <div className="text-center space-y-4">
-                        <CheckCircle className="w-16 h-16 mx-auto text-green-500" />
-                        <h3 className="text-2xl font-bold text-green-600">
-                            Booking Confirmed!
-                        </h3>
-                        <p className="text-gray-600">
-                            A confirmation email has been sent to{" "}
-                            <strong>{data.email}</strong>
-                        </p>
-                        <p className="text-sm text-gray-500">
-                            Booking Reference:{" "}
-                            <strong>
-                                BK
-                                {Math.random()
-                                    .toString(36)
-                                    .substr(2, 9)
-                                    .toUpperCase()}
-                            </strong>
-                        </p>
                     </div>
                 )}
             </div>

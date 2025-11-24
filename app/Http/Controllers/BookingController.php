@@ -156,6 +156,7 @@ class BookingController extends Controller
 
     public function storePublic(Request $request)
     {
+        // dd($request->all());
         Log::info('Received public booking request', $request->all());
 
         $validated = $request->validate([
@@ -167,7 +168,7 @@ class BookingController extends Controller
             'check_in_date'  => 'required|date|after_or_equal:today',
             'check_out_date' => 'required|date|after:check_in_date',
             'total_price'    => 'required|numeric|min:0',
-            'payment_method' => 'nullable|string' // Added payment_method validation
+            'payment_method' => 'nullable|string|in:pay_later,gcash'
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
@@ -198,8 +199,7 @@ class BookingController extends Controller
             $number = $lastBooking ? $lastBooking->id + 1 : 1;
             $bookingNumber = 'BK' . str_pad($number, 5, '0', STR_PAD_LEFT);
 
-            // Determine initial status based on payment method
-            $initialStatus = ($request->payment_method === 'pay_later') ? 'Confirmed' : 'Pending';
+            $selectedMethod = $validated['payment_method'] ?? null;
 
             $booking = Booking::create([
                 'customer_id' => $customer->id,
@@ -207,32 +207,39 @@ class BookingController extends Controller
                 'check_in_date' => $validated['check_in_date'],
                 'check_out_date' => $validated['check_out_date'],
                 'total_price' => $validated['total_price'],
-                'status' => $initialStatus,
+                'status' => 'Pending',
                 'booking_source' => 'online',
                 'booking_number' => $bookingNumber,
             ]);
 
+            $paymentMethodLabel = match ($selectedMethod) {
+                'pay_later' => 'Pay Later',
+                'gcash' => 'GCash',
+                default => 'Pending Online',
+            };
+
             Payment::create([
                 'booking_id' => $booking->id,
                 'amount' => $validated['total_price'],
-                'payment_method' => $request->payment_method === 'pay_later' ? 'Pay Later' : 'Pending Online',
+                'payment_method' => $paymentMethodLabel,
                 'status' => PaymentStatus::Pending,
                 'transaction_id' => 'PENDING',
                 'payment_date' => Carbon::now(),
             ]);
 
             // Handle Pay Later Logic
-            if ($request->payment_method === 'pay_later') {
+            if ($selectedMethod === 'pay_later') {
                 try {
+                    $booking->loadMissing(['customer', 'room.roomType', 'payment']);
                     Mail::to($customer->email)->send(new BookingConfirmation($booking));
                 } catch (\Exception $e) {
                     Log::error('Failed to send booking email: ' . $e->getMessage());
                 }
 
-                return redirect()->route('customer.reservations')->with('success', 'Booking confirmed! Please pay upon arrival.');
+                return back()->with('success', 'Reservation received! Please check your email for payment instructions.');
             }
-
-            // Redirect to PayMongo Payment for online payments
+            
+            // Redirect to PayMongo Payment for online payments (GCash and others)
             return redirect()->route('bookings.pay', ['booking' => $booking->id]);
         });
     }

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Link, usePage } from "@inertiajs/react";
 import PublicBookingModal from "@/Components/PublicBookingModal";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function Welcome({ rooms, searchParams }) {
     const { props } = usePage();
@@ -106,7 +107,8 @@ export default function Welcome({ rooms, searchParams }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+        <div className="min-h-screen  bg-gradient-to-br from-slate-50 via-white to-blue-50">
+            <Toaster />
             {/* Header */}
             <header
                 className={`fixed top-0 w-full z-50 transition-all duration-300 ${
@@ -115,7 +117,7 @@ export default function Welcome({ rooms, searchParams }) {
                         : "bg-transparent"
                 }`}
             >
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div className="max-w-7xl dark:bg-black mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                             <Sparkles className="w-6 h-6 text-white" />
@@ -156,7 +158,12 @@ export default function Welcome({ rooms, searchParams }) {
                                 Dashboard
                             </Link>
                         ) : (
-                            <Link href={route("login")}>Login Here</Link>
+                            <Link
+                                className=" font-medium bg-blue-600 text-white px-4 py-2 rounded-md"
+                                href={route("login")}
+                            >
+                                Login Here
+                            </Link>
                         )}
                     </nav>
                 </div>
