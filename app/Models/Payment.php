@@ -18,7 +18,8 @@ class Payment extends Model
         'payment_date',
         'status',
         'payment_method',
-        'transaction_id', // <--- Add this line
+        'transaction_id',
+        'refund_reason',
     ];
 
     protected $casts = [

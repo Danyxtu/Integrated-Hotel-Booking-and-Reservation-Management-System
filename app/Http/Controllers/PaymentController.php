@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentStatus;
+use App\Mail\PaymentCancelled;
+use App\Mail\PaymentConfirmed;
+use App\Mail\PaymentRefunded;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -86,8 +91,26 @@ class PaymentController extends Controller
             'status' => ['required', Rule::in(PaymentStatus::getValues())],
         ]);
 
+        $oldStatus = $payment->status;
         $payment->status = $request->status;
         $payment->save();
+
+        // Load relationships for email
+        $payment->loadMissing(['booking.customer', 'booking.room.roomType']);
+
+        // Send email based on status change
+        if ($payment->booking && $payment->booking->customer) {
+            try {
+                if ($request->status === PaymentStatus::Cancelled) {
+                    Mail::to($payment->booking->customer->email)->send(new PaymentCancelled($payment));
+                } elseif ($request->status === PaymentStatus::Completed) {
+                    Mail::to($payment->booking->customer->email)->send(new PaymentConfirmed($payment));
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to send payment status email: ' . $e->getMessage());
+                // Continue execution even if email fails
+            }
+        }
 
         return back()->with('success', 'Payment status updated successfully.');
     }
@@ -150,6 +173,19 @@ class PaymentController extends Controller
         $payment->status = PaymentStatus::Refunded;
         $payment->refund_reason = $request->reason;
         $payment->save();
+
+        // Load relationships for email
+        $payment->loadMissing(['booking.customer', 'booking.room.roomType']);
+
+        // Send refund email to customer
+        if ($payment->booking && $payment->booking->customer) {
+            try {
+                Mail::to($payment->booking->customer->email)->send(new PaymentRefunded($payment));
+            } catch (\Exception $e) {
+                Log::error('Failed to send payment refund email: ' . $e->getMessage());
+                // Continue execution even if email fails
+            }
+        }
 
         return back()->with('success', 'Payment refunded successfully.');
     }
