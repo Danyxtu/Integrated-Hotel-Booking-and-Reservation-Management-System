@@ -34,7 +34,7 @@ class CustomerController extends Controller
 
         $upcomingStaysCount = $upcomingBookings->count();
 
-        $pendingPayments = Payment::whereHas('booking.customer', function ($query) use ($user) {
+        $pendingPayments = (float) Payment::whereHas('booking.customer', function ($query) use ($user) {
             $query->where('user_id', $user->id);
         })
             ->where('status', PaymentStatus::Pending)
@@ -45,7 +45,7 @@ class CustomerController extends Controller
         })
             ->orderBy('created_at', 'desc')
             ->take(5)
-            ->with('room.roomType', 'hotel') // Eager load relationships for display
+            ->with('room.roomType', 'hotel')
             ->get();
 
         return Inertia::render('Customer/Dashboard', [

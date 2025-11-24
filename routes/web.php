@@ -15,6 +15,7 @@ use App\Models\RoomType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\BookingController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\CustomerController;
 
 Route::get('/', function (Request $request) {
     // Fetch room types with their calculated or stored rating
@@ -116,7 +117,7 @@ Route::middleware(['auth', 'role:user'])
     ->prefix('customer')
     ->name('customer.')
     ->group(function () {
-        Route::get('/dashboard', [\App\Http\Controllers\CustomerController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [CustomerController::class, 'index'])->name('dashboard');
         Route::get('/reservations', function () {
             return Inertia::render('Customer/Reservations');
         })->name('reservations');
@@ -129,6 +130,7 @@ Route::middleware(['auth', 'role:user'])
 // Route::get('/booking/{booking}/pay', [BookingController::class, 'payWithStripe'])->name('bookings.pay');
 // Route::get('/booking/{booking}/success', [BookingController::class, 'paymentSuccess'])->name('bookings.payment.success');
 
+Route::post('/bookings/store', [BookingController::class, 'store'])->name('bookings.store');
 // Payment with Paymongo
 Route::get('/booking/{booking}/pay', [BookingController::class, 'payWithPaymongo'])->name('bookings.pay');
 Route::get('/booking/{booking}/success', [BookingController::class, 'paymentSuccess'])->name('bookings.payment.success');
