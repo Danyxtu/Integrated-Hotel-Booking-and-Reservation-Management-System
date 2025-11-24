@@ -116,6 +116,7 @@ class BookingController extends Controller
             'status'         => 'required|in:Pending,Confirmed,Cancelled,Checked In,Checked Out,No Show,Expired',
             'first_name'     => 'required|string|max:255',
             'last_name'      => 'required|string|max:255',
+            'email'          => 'required|email|max:255',
             'phone'          => 'required|string|max:20',
         ]);
 
@@ -126,6 +127,7 @@ class BookingController extends Controller
         $customer = Customer::create([
             'first_name' => $validated['first_name'],
             'last_name'  => $validated['last_name'],
+            'email'      => $validated['email'],
             'phone'      => $validated['phone'],
             'type'       => 'walk_in',
             'user_id'    => null,
@@ -150,6 +152,19 @@ class BookingController extends Controller
             'transaction_id'  => 'TRX' . strtoupper(uniqid()),
             'payment_date'    => Carbon::now(),
         ]);
+
+        // Load relationships for email
+        $booking->loadMissing(['customer', 'room.roomType', 'payment']);
+
+        // Send booking confirmation email with pending payment notification
+        if ($customer->email) {
+            try {
+                Mail::to($customer->email)->send(new BookingConfirmation($booking));
+            } catch (\Exception $e) {
+                Log::error('Failed to send walk-in booking email: ' . $e->getMessage());
+                // Continue execution even if email fails
+            }
+        }
 
         return redirect()->route('admin.dashboard')->with('success', 'Booking created successfully.');
     }

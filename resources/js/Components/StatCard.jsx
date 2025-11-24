@@ -8,16 +8,6 @@ const StatCard = ({ name, value, trend, icon: Icon, color }) => (
             >
                 <Icon className={`w-6 h-6 text-${color}-600`} />
             </div>
-            <span
-                className={`text-sm font-semibold text-gray-500 flex items-center gap-1`}
-            >
-                {trend && (
-                    <>
-                        <TrendingUp className="w-4 h-4 text-green-500" />
-                        {trend}
-                    </>
-                )}
-            </span>
         </div>
         <h3 className="text-3xl font-bold text-gray-900 mb-1">{value}</h3>
         <p className="text-sm text-gray-500">{name}</p>

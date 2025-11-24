@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import axios from 'axios';
 
 const Walkin = ({ roomTypes }) => {
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
+        email: '',
         phone: '',
         room_type: '',
         check_in_date: '',
@@ -57,6 +59,10 @@ const Walkin = ({ roomTypes }) => {
                     <div>
                         <label htmlFor="phone" className="block font-medium text-gray-700">Phone</label>
                         <input type="text" id="phone" value={formData.phone} onChange={handleChange} className="mt-1 block w-full" />
+                    </div>
+                    <div>
+                        <label htmlFor="email" className="block font-medium text-gray-700">Email</label>
+                        <input type="email" id="email" value={formData.email} onChange={handleChange} className="mt-1 block w-full" />
                     </div>
                     <div>
                         <label htmlFor="room_type" className="block font-medium text-gray-700">Room Type</label>

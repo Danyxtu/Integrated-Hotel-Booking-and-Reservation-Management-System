@@ -75,12 +75,7 @@ const AdminLayout = ({ children }) => {
         {
             name: "Settings",
             icon: Settings,
-            submenu: [
-                { name: "General", path: "admin.settings.general" },
-                { name: "Pricing & Rates", path: "admin.settings.pricing" },
-                { name: "Email Templates", path: "admin.settings.emails" },
-                { name: "Integrations", path: "admin.settings.integrations" },
-            ],
+            submenu: [{ name: "General", path: "admin.settings.general" }],
         },
     ];
 
@@ -307,7 +302,6 @@ const AdminLayout = ({ children }) => {
                                         Admin
                                     </p>
                                 </div>
-                                <ChevronDown className="w-4 h-4 text-gray-400" />
                             </button>
                         </div>
                     </div>

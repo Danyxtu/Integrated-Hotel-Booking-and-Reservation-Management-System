@@ -18,15 +18,7 @@ import CreateBookingModal from "@/Components/CreateBookingModal";
 import { useInstantTransition, useScroll } from "framer-motion";
 import BookingDetails from "./BookingDetails";
 
-const statusFilters = [
-    "All",
-    "Pending",
-    "Confirmed",
-    "Checked In",
-    "Checked Out",
-    "Cancelled",
-    "No Show",
-];
+const statusFilters = ["All", "Pending", "Confirmed", "Cancelled", "No Show"];
 
 const statusStyles = {
     Pending: {
@@ -40,18 +32,6 @@ const statusStyles = {
         bgColor: "bg-green-100",
         textColor: "text-green-800",
         label: "Confirmed",
-    },
-    "Checked In": {
-        icon: ArrowRightCircle,
-        bgColor: "bg-blue-100",
-        textColor: "text-blue-800",
-        label: "Checked In",
-    },
-    "Checked Out": {
-        icon: CheckCircle2,
-        bgColor: "bg-gray-100",
-        textColor: "text-gray-800",
-        label: "Checked Out",
     },
     Cancelled: {
         icon: XCircle,
@@ -153,10 +133,6 @@ const AllBookings = ({ bookings, rooms }) => {
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
-                                <FileDown className="w-4 h-4" />
-                                Export
-                            </button>
                             <button
                                 onClick={() => setCreateBookingModalOpen(true)}
                                 className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm"
@@ -270,7 +246,11 @@ const AllBookings = ({ bookings, rooms }) => {
                                         <td className="px-6 py-4">
                                             <div className="flex justify-center items-center gap-2">
                                                 <button
-                                                    onClick={() => setSelectedBooking(booking)}
+                                                    onClick={() =>
+                                                        setSelectedBooking(
+                                                            booking
+                                                        )
+                                                    }
                                                     className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"
                                                 >
                                                     <Eye className="w-4 h-4" />
