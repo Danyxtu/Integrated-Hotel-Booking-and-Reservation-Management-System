@@ -43,7 +43,7 @@ const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
                     {roomType.image_url && (
                         <div className="w-full h-64 rounded-lg overflow-hidden">
                             <img
-                                src={`../../../../../storage/app/public/${roomType.image_url}`}
+                                src={`https://hkesjqamfhhvwfsozgcj.supabase.co/storage/v1/object/public/room_type_images/${roomType.image_url}`}
                                 alt={roomType.name}
                                 className="w-full h-full object-cover"
                             />
