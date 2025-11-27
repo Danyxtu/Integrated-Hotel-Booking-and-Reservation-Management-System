@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class RoomType extends Model
 {
@@ -21,8 +22,15 @@ class RoomType extends Model
         'rating',
     ];
 
+    protected $appends = ['image_url'];
+
     public function rooms()
     {
         return $this->hasMany(Room::class);
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image_path ? Storage::url($this->image_path) : null;
     }
 }

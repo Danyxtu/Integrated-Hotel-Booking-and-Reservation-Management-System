@@ -85,7 +85,7 @@ class BookingController extends Controller
                 'room_id' => $room->id,
                 'name' => $room->roomType->name,
                 'price' => $room->roomType->price,
-                'image_path' => $room->roomType->image_path,
+                'image_path' => $room->roomType->image_url ?? 'https://via.placeholder.com/600x400',
                 'features' => explode(',', $room->roomType->amenities),
                 'rating' => $room->roomType->rating ?? 4.5,
             ];

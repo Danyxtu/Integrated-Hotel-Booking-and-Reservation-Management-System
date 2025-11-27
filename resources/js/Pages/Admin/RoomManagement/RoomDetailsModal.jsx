@@ -99,10 +99,10 @@ const RoomDetailsModal = ({ room, show, onClose }) => {
                                 <Label htmlFor="room-type-amenities">Amenities</Label>
                                 <p id="room-type-amenities" className="font-medium text-sm">{room.room_type?.amenities || 'N/A'}</p>
                             </div>
-                            {room.room_type?.image_path && (
+                            {room.room_type?.image_url && (
                                 <div className="mt-4">
                                     <Label htmlFor="room-type-image">Image</Label>
-                                    <img src={`/storage/${room.room_type.image_path}`} alt={room.room_type.name} className="mt-2 w-full h-48 object-cover rounded-lg"/>
+                                    <img src={room.room_type.image_url} alt={room.room_type.name} className="mt-2 w-full h-48 object-cover rounded-lg"/>
                                 </div>
                             )}
                         </div>

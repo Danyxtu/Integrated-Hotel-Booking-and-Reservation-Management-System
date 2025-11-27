@@ -76,6 +76,7 @@ const PublicBookingModal = ({
                     name: roomType.name || r.name || `Room ${r.id}`,
                     price: roomType.price || r.price || 0,
                     image_path:
+                        roomType.image_url ||
                         roomType.image_path ||
                         r.image_path ||
                         "https://via.placeholder.com/600x400",

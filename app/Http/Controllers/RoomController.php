@@ -59,7 +59,7 @@ class RoomController extends Controller
                 'name' => $room->roomType->name,
                 'description' => $room->roomType->description,
                 'price' => $room->roomType->price,
-                'image_path' => $room->roomType->image_path ?? 'https://via.placeholder.com/600x400',
+                'image_path' => $room->roomType->image_url ?? 'https://via.placeholder.com/600x400',
                 'features' => explode(',', $room->roomType->amenities),
                 'rating' => 4.5, // Placeholder rating
                 'capacity_adults' => $room->roomType->capacity_adults,

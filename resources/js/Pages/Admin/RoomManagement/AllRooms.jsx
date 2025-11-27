@@ -269,9 +269,9 @@ const AllRooms = ({
                             className="bg-white rounded-2xl shadow-md border border-gray-200/80 overflow-hidden flex flex-col"
                         >
                             <div className="relative">
-                                {room.room_type?.image_path ? (
+                                {room.room_type?.image_url ? (
                                     <img
-                                        src={`/storage/${room.room_type.image_path}`}
+                                        src={room.room_type.image_url}
                                         alt={room.room_type.name}
                                         className="h-48 w-full object-cover"
                                     />

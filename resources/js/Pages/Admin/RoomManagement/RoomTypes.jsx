@@ -39,9 +39,9 @@ const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-6 py-4">
-                    {roomType.image_path && (
+                    {roomType.image_url && (
                         <div className="w-full h-64 rounded-lg overflow-hidden">
-                             <img src={`/storage/${roomType.image_path}`} alt={roomType.name} className="w-full h-full object-cover"/>
+                             <img src={roomType.image_url} alt={roomType.name} className="w-full h-full object-cover"/>
                         </div>
                     )}
                     <div className="space-y-4">
@@ -326,8 +326,8 @@ const RoomTypes = ({ roomTypes, flash, errors }) => {
                     {roomTypes.map(type => (
                         <div key={type.id} className="bg-white rounded-2xl shadow-md border border-gray-200/80 overflow-hidden flex flex-col">
                             <div className="relative cursor-pointer" onClick={() => handleViewDetails(type)}>
-                                {type.image_path ? (
-                                    <img src={`/storage/${type.image_path}`} alt={type.name} className="h-48 w-full object-cover"/>
+                                {type.image_url ? (
+                                    <img src={type.image_url} alt={type.name} className="h-48 w-full object-cover"/>
                                 ) : (
                                     <div className="h-48 w-full bg-gray-200 flex items-center justify-center text-gray-500">
                                         No Image
