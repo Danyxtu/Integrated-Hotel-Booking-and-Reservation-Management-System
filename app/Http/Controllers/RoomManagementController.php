@@ -117,7 +117,7 @@ class RoomManagementController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('room_type_images', 'public');
+            $path = $request->file('image')->store('room_type_images');
             $validated['image_path'] = $path;
         }
 
@@ -141,9 +141,9 @@ class RoomManagementController extends Controller
         if ($request->hasFile('image')) {
             // Delete old image if it exists
             if ($roomType->image_path) {
-                Storage::disk('public')->delete($roomType->image_path);
+                Storage::delete($roomType->image_path);
             }
-            $path = $request->file('image')->store('room_type_images', 'public');
+            $path = $request->file('image')->store('room_type_images');
             $validated['image_path'] = $path;
         }
 
@@ -219,7 +219,7 @@ class RoomManagementController extends Controller
 
         // Delete image if it exists
         if ($roomType->image_path) {
-            Storage::disk('public')->delete($roomType->image_path);
+            Storage::delete($roomType->image_path);
         }
 
         $roomType->delete();
