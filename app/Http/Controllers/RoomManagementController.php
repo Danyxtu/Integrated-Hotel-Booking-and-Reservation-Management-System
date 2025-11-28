@@ -112,15 +112,11 @@ class RoomManagementController extends Controller
             'image'             => 'nullable|image|max:2048',
         ]);
 
-        // ✔ Upload to Supabase
+        // Upload to Supabase
         if ($request->hasFile('image')) {
-            // For Update: Delete old image if it exists
-            if (isset($roomType) && $roomType->image_path) {
-                Storage::disk('supabase')->delete($roomType->image_path);
-            }
+            $path = $request->file('image')
+                ->store('room_type_images', 'supabase');
 
-            // Upload new image properly
-            $path = $request->file('image')->store('room_type_images', 'supabase'); // ✅ Correct method
             $validated['image_path'] = $path;
         }
 
@@ -128,6 +124,7 @@ class RoomManagementController extends Controller
 
         return back()->with('success', 'Room Type added successfully.');
     }
+
 
     public function updateRoomType(Request $request, RoomType $roomType)
     {
@@ -141,16 +138,15 @@ class RoomManagementController extends Controller
             'image'             => 'nullable|image|max:2048',
         ]);
 
-        // ✔ Replace image in Supabase
         if ($request->hasFile('image')) {
 
-            // Delete the old file
+            // Delete old file
             if ($roomType->image_path) {
                 Storage::disk('supabase')->delete($roomType->image_path);
             }
 
-            $file = $request->file('image');
-            $path = Storage::disk('supabase')->put('room_type_images', $file);
+            // Upload new file
+            $path = $request->file('image')->store('room_type_images', 'supabase');
 
             $validated['image_path'] = $path;
         }
@@ -159,6 +155,7 @@ class RoomManagementController extends Controller
 
         return back()->with('success', 'Room Type updated successfully.');
     }
+
 
     public function show(Room $room)
     {
