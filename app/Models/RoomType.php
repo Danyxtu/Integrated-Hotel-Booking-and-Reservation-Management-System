@@ -18,11 +18,11 @@ class RoomType extends Model
         'capacity_adults',
         'capacity_children',
         'amenities',
-        'image_data', // Changed from image_path
+        'image_path',
         'rating',
     ];
 
-    // Removed protected $appends = ['image_url'];
+    protected $appends = ['image_url'];
 
     public function rooms()
     {
@@ -31,7 +31,6 @@ class RoomType extends Model
 
     public function getImageUrlAttribute()
     {
-        // Return base64 encoded image data directly
-        return $this->image_data ? 'data:image/jpeg;base64,' . base64_encode($this->image_data) : null;
+        return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;
     }
 }

@@ -117,7 +117,8 @@ class RoomManagementController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image_data'] = file_get_contents($request->file('image')->getRealPath());
+            $path = $request->file('image')->store('room_type_images');
+            $validated['image_path'] = $path;
         }
 
         RoomType::create($validated);
@@ -138,7 +139,12 @@ class RoomManagementController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image_data'] = file_get_contents($request->file('image')->getRealPath());
+            // Delete old image if it exists
+            if ($roomType->image_path) {
+                Storage::delete($roomType->image_path);
+            }
+            $path = $request->file('image')->store('room_type_images');
+            $validated['image_path'] = $path;
         }
 
         $roomType->update($validated);
@@ -211,6 +217,10 @@ class RoomManagementController extends Controller
             return back()->with('error', 'Cannot delete this room type because it has active bookings.');
         }
 
+        // Delete image if it exists
+        if ($roomType->image_path) {
+            Storage::delete($roomType->image_path);
+        }
 
         $roomType->delete();
 
