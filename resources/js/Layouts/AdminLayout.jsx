@@ -36,7 +36,6 @@ const AdminLayout = ({ children }) => {
         {
             name: "Reservations",
             icon: Calendar,
-            badge: "12",
             submenu: [
                 {
                     name: "All Bookings",
