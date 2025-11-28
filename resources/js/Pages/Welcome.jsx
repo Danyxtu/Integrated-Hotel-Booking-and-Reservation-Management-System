@@ -13,6 +13,8 @@ import {
     Clock,
     Award,
     Baby,
+    Menu,
+    X,
 } from "lucide-react";
 import { Link, usePage } from "@inertiajs/react";
 import PublicBookingModal from "@/Components/PublicBookingModal";
@@ -33,6 +35,7 @@ export default function Welcome({ rooms, searchParams }) {
     const [children, setChildren] = useState(initialChildren);
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
 
     // State for validation errors
     const [errors, setErrors] = useState({});
@@ -48,6 +51,17 @@ export default function Welcome({ rooms, searchParams }) {
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    useEffect(() => {
+        if (showMobileMenu) {
+            document.body.classList.add("overflow-hidden");
+        } else {
+            document.body.classList.remove("overflow-hidden");
+        }
+        return () => {
+            document.body.classList.remove("overflow-hidden");
+        };
+    }, [showMobileMenu]);
 
     // Unified handler for all "Book Now" and "Search" buttons
     const handleBookingRequest = () => {
@@ -166,8 +180,81 @@ export default function Welcome({ rooms, searchParams }) {
                             </Link>
                         )}
                     </nav>
+
+                    {/* Mobile menu toggle */}
+                    <div className="md:hidden flex items-center">
+                        <button
+                            onClick={() => setShowMobileMenu(!showMobileMenu)}
+                            className="text-gray-700 focus:outline-none"
+                        >
+                            {showMobileMenu ? (
+                                <X className="h-6 w-6" />
+                            ) : (
+                                <Menu className="h-6 w-6" />
+                            )}
+                        </button>
+                    </div>
                 </div>
             </header>
+
+            {/* Mobile Menu */}
+            {showMobileMenu && (
+                <div
+                    className={`md:hidden fixed top-0 left-0 w-full h-full bg-white z-40 transform ${
+                        showMobileMenu ? "translate-x-0" : "-translate-x-full"
+                    } transition-transform duration-300 ease-in-out`}
+                >
+                    <div className="flex justify-end p-6">
+                        <button
+                            onClick={() => setShowMobileMenu(false)}
+                            className="text-gray-700 focus:outline-none"
+                        >
+                            <X className="h-6 w-6" />
+                        </button>
+                    </div>
+                    <nav className="flex flex-col items-center gap-6 py-8">
+                        <a
+                            href="#rooms"
+                            className="text-gray-700 hover:text-blue-600 font-medium text-lg"
+                            onClick={() => setShowMobileMenu(false)}
+                        >
+                            Rooms
+                        </a>
+                        <a
+                            href="#amenities"
+                            className="text-gray-700 hover:text-blue-600 font-medium text-lg"
+                            onClick={() => setShowMobileMenu(false)}
+                        >
+                            Amenities
+                        </a>
+                        <a
+                            href="#contact"
+                            className="text-gray-700 hover:text-blue-600 font-medium text-lg"
+                            onClick={() => setShowMobileMenu(false)}
+                        >
+                            Contact
+                        </a>
+                        {user ? (
+                            <Link
+                                href={route("customer.dashboard")}
+                                className="text-gray-700 hover:text-blue-600 font-medium text-lg"
+                                onClick={() => setShowMobileMenu(false)}
+                            >
+                                Dashboard
+                            </Link>
+                        ) : (
+                            <Link
+                                className="font-medium bg-blue-600 text-white px-6 py-3 rounded-md text-lg"
+                                href={route("login")}
+                                onClick={() => setShowMobileMenu(false)}
+                            >
+                                Login Here
+                            </Link>
+                        )}
+                    </nav>
+                </div>
+            )}
+
 
             {/* Hero */}
             <section className="relative pt-32 pb-20 px-6 overflow-hidden">
