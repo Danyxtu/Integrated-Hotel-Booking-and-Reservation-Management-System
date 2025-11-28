@@ -22,14 +22,7 @@ import Modal from "@/Components/Modal";
 import axios from "axios";
 import RoomCard from "@/Components/RoomCard";
 import RoomDetailModal from "@/Components/RoomDetailModal";
-
-// Helper function to resolve image paths
-const getImageSrc = (imagePath) => {
-    if (!imagePath) return "https://via.placeholder.com/600x400";
-    if (imagePath.startsWith("http") || imagePath.startsWith("/"))
-        return imagePath;
-    return `/storage/${imagePath}`;
-};
+import { getImageUrl } from "@/utils/imageUrl";
 
 const Rooms = () => {
     const { rooms } = usePage().props;

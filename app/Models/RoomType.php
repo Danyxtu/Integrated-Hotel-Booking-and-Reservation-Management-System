@@ -31,6 +31,21 @@ class RoomType extends Model
 
     public function getImageUrlAttribute()
     {
-        return $this->image_path ? Storage::disk('public')->url($this->image_path) : null;
+        if (!$this->image_path) {
+            return null;
+        }
+        
+        // If using Supabase storage, construct the public URL
+        $disk = Storage::disk('supabase');
+        $baseUrl = config('filesystems.disks.supabase.url');
+        
+        if ($baseUrl) {
+            // Ensure the path doesn't have a leading slash for proper URL construction
+            $path = ltrim($this->image_path, '/');
+            return rtrim($baseUrl, '/') . '/' . $path;
+        }
+        
+        // Fallback to storage URL if no base URL is configured
+        return $disk->url($this->image_path);
     }
 }

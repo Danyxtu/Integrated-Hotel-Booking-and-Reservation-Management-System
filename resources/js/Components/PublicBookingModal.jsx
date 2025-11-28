@@ -8,6 +8,7 @@ import TextInput from "@/Components/TextInput";
 import { useForm } from "@inertiajs/react";
 import { CreditCard, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const PublicBookingModal = ({
     show,
@@ -128,12 +129,6 @@ const PublicBookingModal = ({
         });
     }, [rooms, adults, children]);
 
-    const getImageSrc = (imagePath) => {
-        if (!imagePath)
-            return "https://via.placeholder.com/400x250?text=LuxStay+Room";
-        if (imagePath.startsWith("http")) return imagePath;
-        return `/storage/${imagePath.replace(/^\/?storage\//, "")}`;
-    };
 
     const selectRoom = (room) => {
         setSelectedRoom(room);
@@ -266,7 +261,7 @@ const PublicBookingModal = ({
                                 >
                                     <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                                         <img
-                                            src={getImageSrc(room.image_path)}
+                                            src={getImageUrl(room.image_path, room.image_url || room.room_type?.image_url)}
                                             alt={room.name}
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
@@ -306,7 +301,7 @@ const PublicBookingModal = ({
                     <div className="space-y-4">
                         <div className="bg-gray-100 rounded-lg overflow-hidden h-80">
                             <img
-                                src={getImageSrc(selectedRoom.image_path)}
+                                src={getImageUrl(selectedRoom.image_path, selectedRoom.image_url || selectedRoom.room_type?.image_url)}
                                 alt={selectedRoom.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

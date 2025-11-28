@@ -19,6 +19,7 @@ import {
 import { Link, usePage } from "@inertiajs/react";
 import PublicBookingModal from "@/Components/PublicBookingModal";
 import { Toaster } from "@/components/ui/toaster";
+import { getImageUrl } from "@/utils/imageUrl";
 
 export default function Welcome({ rooms, searchParams }) {
     const { props } = usePage();
@@ -113,12 +114,6 @@ export default function Welcome({ rooms, searchParams }) {
         },
     ];
 
-    const getImageSrc = (imagePath) => {
-        if (!imagePath) return "https://via.placeholder.com/600x400";
-        // Check if the path is already a full URL
-        if (imagePath.startsWith("http")) return imagePath;
-        return `/storage/${imagePath}`;
-    };
 
     return (
         <div className="min-h-screen  bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -398,7 +393,7 @@ export default function Welcome({ rooms, searchParams }) {
                         {standardRoom && (
                             <>
                                 <img
-                                    src={getImageSrc(standardRoom.image_path)}
+                                    src={getImageUrl(standardRoom.image_path, standardRoom.image_url || standardRoom.room_type?.image_url)}
                                     alt={standardRoom.name}
                                     className="relative rounded-3xl shadow-2xl w-full h-[600px] object-cover"
                                 />
@@ -478,7 +473,7 @@ export default function Welcome({ rooms, searchParams }) {
                             >
                                 <div className="relative overflow-hidden h-64">
                                     <img
-                                        src={getImageSrc(room.image_path)}
+                                        src={getImageUrl(room.image_path, room.image_url || room.room_type?.image_url)}
                                         alt={room.name}
                                         className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                     />

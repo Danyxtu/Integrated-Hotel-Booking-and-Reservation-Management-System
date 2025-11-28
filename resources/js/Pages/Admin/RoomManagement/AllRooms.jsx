@@ -327,13 +327,15 @@ const AllRooms = ({
                                         </span>
                                     </p>
                                     <div className="flex items-center gap-2">
-                                         <button
-                                            onClick={() => setSelectedRoom(room)}
+                                        <button
+                                            onClick={() =>
+                                                setSelectedRoom(room)
+                                            }
                                             className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"
                                         >
                                             <Eye className="w-4 h-4" />
                                         </button>
-                                         {/* <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><Edit className="w-4 h-4"/></button>
+                                        {/* <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><Edit className="w-4 h-4"/></button>
                                          <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><ToggleLeft className="w-4 h-4"/></button>
                                          <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-md transition"><MoreVertical className="w-4 h-4"/></button> */}
                                     </div>

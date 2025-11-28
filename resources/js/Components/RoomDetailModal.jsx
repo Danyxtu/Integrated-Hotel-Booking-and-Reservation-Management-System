@@ -10,16 +10,7 @@ import {
     CheckCircle,
 } from "lucide-react";
 import Modal from "@/Components/Modal";
-
-const getImageSrc = (imagePath) => {
-    if (!imagePath)
-        return "https://via.placeholder.com/600x400?text=LuxStay+Room";
-    if (typeof imagePath === "string" && imagePath.startsWith("http"))
-        return imagePath;
-    return `/storage/${String(imagePath || "")
-        .replace(/^\/?storage\//, "")
-        .replace(/^\/+/, "")}`;
-};
+import { getImageUrl } from "@/utils/imageUrl";
 
 const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
     const { auth } = usePage().props;
@@ -49,9 +40,9 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
     });
 
     const images = room.image_path
-        ? [getImageSrc(room.image_path)]
+        ? [getImageUrl(room.image_path, room.image_url || room.room_type?.image_url)]
         : room.images && room.images.length > 0
-        ? room.images.map((img) => getImageSrc(img))
+        ? room.images.map((img) => getImageUrl(img))
         : ["https://via.placeholder.com/600x400"];
 
     const nextImage = () => {

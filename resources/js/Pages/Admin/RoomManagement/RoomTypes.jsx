@@ -26,10 +26,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import ImageWithFallback from "@/Components/ImageWithFallback"; // Import the new component
+import { getImageUrl } from "@/utils/imageUrl";
 
 const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
-    const BASE =
-        "https://hkesjqamfhhvwfsozgcj.supabase.co/storage/v1/object/public/";
     if (!roomType) return null;
 
     return (
@@ -44,7 +43,7 @@ const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
                 <div className="grid gap-6 py-4">
                     <div className="w-full h-64 rounded-lg overflow-hidden">
                         <ImageWithFallback
-                            src={`https://hkesjqamfhhvwfsozgcj.supabase.co/storage/v1/object/public/${roomType.image_path}`}
+                            src={getImageUrl(roomType.image_path, roomType.image_url)}
                             alt={roomType.name}
                             className="w-full h-full object-cover"
                             fallbackComponent={

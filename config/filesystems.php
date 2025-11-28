@@ -62,10 +62,11 @@ return [
         'supabase' => [
             'driver' => 's3',
             'key' => env('SUPABASE_STORAGE_KEY'),
-            'secret' => env('SUPABASE_STORAGE_KEY'),
-            'region' => 'us-east-1',
+            'secret' => env('SUPABASE_STORAGE_SECRET'),
+            'region' => env('SUPABASE_STORAGE_REGION', 'us-east-1'),
             'bucket' => env('SUPABASE_STORAGE_BUCKET'),
             'endpoint' => env('SUPABASE_STORAGE_ENDPOINT'),
+            'url' => env('SUPABASE_STORAGE_URL'),
             'use_path_style_endpoint' => true,
             'visibility' => 'public',
             'throw' => false,

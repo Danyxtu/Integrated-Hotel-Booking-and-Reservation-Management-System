@@ -1,16 +1,7 @@
 import React from "react";
 import { differenceInDays } from "date-fns";
 import { Wifi, Wind, Bed, Users, Star } from "lucide-react";
-
-const getImageSrc = (imagePath) => {
-    if (!imagePath)
-        return "https://via.placeholder.com/400x300?text=LuxStay+Room";
-    if (typeof imagePath === "string" && imagePath.startsWith("http"))
-        return imagePath;
-    return `/storage/${String(imagePath || "")
-        .replace(/^\/?storage\//, "")
-        .replace(/^\/+/, "")}`;
-};
+import { getImageUrl } from "@/utils/imageUrl";
 
 const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
     const { startDate, endDate } = filters;
@@ -38,7 +29,7 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
             <div className="flex flex-col md:flex-row">
                 <div className="md:w-72 md:min-w-[288px] h-56 md:h-auto md:min-h-[280px] flex-shrink-0 relative">
                     <img
-                        src={getImageSrc(room.image_path || room.images?.[0])}
+                        src={getImageUrl(room.image_path || room.images?.[0], room.image_url || room.room_type?.image_url)}
                         alt={
                             room.room_type?.name ||
                             room.roomType?.name ||
