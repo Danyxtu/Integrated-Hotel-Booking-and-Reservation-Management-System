@@ -28,6 +28,8 @@ import { Toaster } from "@/components/ui/toaster";
 import ImageWithFallback from "@/Components/ImageWithFallback"; // Import the new component
 
 const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
+    const BASE =
+        "https://hkesjqamfhhvwfsozgcj.supabase.co/storage/v1/object/public/";
     if (!roomType) return null;
 
     return (
@@ -42,7 +44,7 @@ const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
                 <div className="grid gap-6 py-4">
                     <div className="w-full h-64 rounded-lg overflow-hidden">
                         <ImageWithFallback
-                            src={roomType.image_url}
+                            src={`https://hkesjqamfhhvwfsozgcj.supabase.co/storage/v1/object/public/${roomType.image_path}`}
                             alt={roomType.name}
                             className="w-full h-full object-cover"
                             fallbackComponent={

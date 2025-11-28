@@ -175,7 +175,7 @@ export default function Welcome({ rooms, searchParams }) {
                     </nav>
                     {!user && (
                         <Link
-                            className=" font-medium bg-blue-600 text-white px-4 py-2 rounded-md"
+                            className=" font-medium block sm:hidden bg-blue-600 text-white px-4 py-2 rounded-md"
                             href={route("login")}
                         >
                             Login Here

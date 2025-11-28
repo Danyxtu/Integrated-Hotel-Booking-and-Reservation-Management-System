@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\Room; // Import the Room model
-use App\Models\RoomType; // Import the RoomType model
-use App\Models\Booking; // Import the Booking model
+use App\Models\Room;
+use App\Models\RoomType;
+use App\Models\Booking;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -15,13 +15,11 @@ use Illuminate\Support\Facades\Storage;
 
 class RoomManagementController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         //
     }
+
     public function showAllRooms(Request $request)
     {
         $filters = $request->only(['status', 'type', 'search']);
@@ -38,40 +36,38 @@ class RoomManagementController extends Controller
             });
         }
 
-        $rooms = $query->get();
-
-        $roomTypes = RoomType::all();
-        $roomStatuses = ['Available', 'Occupied', 'Cleaning', 'Maintenance'];
-
         if ($request->filled('search')) {
             $query->where('room_number', 'like', '%' . $request->input('search') . '%');
         }
 
         return Inertia::render('Admin/RoomManagement/AllRooms', [
-            'rooms' => $rooms,
-            'roomTypes' => $roomTypes,
-            'roomStatuses' => $roomStatuses,
-            'filters' => $filters,
+            'rooms'        => $query->get(),
+            'roomTypes'    => RoomType::all(),
+            'roomStatuses' => ['Available', 'Occupied', 'Cleaning', 'Maintenance'],
+            'filters'      => $filters,
         ]);
     }
+
     public function showAllRoomTypes(Request $request)
     {
         $roomTypes = RoomType::all();
+
         if ($request->wantsJson()) {
-            return response()->json([
-                'room_types' => $roomTypes,
-            ]);
+            return response()->json(['room_types' => $roomTypes]);
         }
+
         return Inertia::render('Admin/RoomManagement/RoomTypes', [
             'roomTypes' => $roomTypes,
         ]);
     }
+
     public function showRoomAvailable(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::now()->toDateString());
-        $endDate = $request->input('end_date', Carbon::now()->addDays(7)->toDateString());
+        $endDate   = $request->input('end_date', Carbon::now()->addDays(7)->toDateString());
 
         $rooms = Room::with('roomType')->get();
+
         $bookings = Booking::with('room')
             ->where(function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('check_in_date', [$startDate, $endDate])
@@ -84,10 +80,10 @@ class RoomManagementController extends Controller
             ->get();
 
         return Inertia::render('Admin/RoomManagement/RoomAvailability', [
-            'rooms' => $rooms,
-            'bookings' => $bookings,
+            'rooms'     => $rooms,
+            'bookings'  => $bookings,
             'startDate' => $startDate,
-            'endDate' => $endDate,
+            'endDate'   => $endDate,
         ]);
     }
 
@@ -96,7 +92,7 @@ class RoomManagementController extends Controller
         $validated = $request->validate([
             'room_number'  => 'required|string|max:255|unique:rooms,room_number',
             'room_type_id' => 'required|exists:room_types,id',
-            'status'       => ['required', 'string', Rule::in(['Available', 'Occupied', 'Cleaning', 'Maintenance'])],
+            'status'       => ['required', Rule::in(['Available', 'Occupied', 'Cleaning', 'Maintenance'])],
         ]);
 
         Room::create($validated);
@@ -116,8 +112,11 @@ class RoomManagementController extends Controller
             'image'             => 'nullable|image|max:2048',
         ]);
 
+        // ✔ Upload to Supabase
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('room_type_images');
+            $file = $request->file('image');
+            $path = Storage::disk('supabase')->put('room_type_images', $file);
+
             $validated['image_path'] = $path;
         }
 
@@ -138,12 +137,17 @@ class RoomManagementController extends Controller
             'image'             => 'nullable|image|max:2048',
         ]);
 
+        // ✔ Replace image in Supabase
         if ($request->hasFile('image')) {
-            // Delete old image if it exists
+
+            // Delete the old file
             if ($roomType->image_path) {
-                Storage::delete($roomType->image_path);
+                Storage::disk('supabase')->delete($roomType->image_path);
             }
-            $path = $request->file('image')->store('room_type_images');
+
+            $file = $request->file('image');
+            $path = Storage::disk('supabase')->put('room_type_images', $file);
+
             $validated['image_path'] = $path;
         }
 
@@ -152,28 +156,8 @@ class RoomManagementController extends Controller
         return back()->with('success', 'Room Type updated successfully.');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function show(Room $room)
     {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Room $room) // Type-hinting for route model binding
-    {
-        // Eager load roomType and current_booking (if any) with its customer
         $room->load(['roomType', 'currentBooking.customer']);
 
         return Inertia::render('Admin/RoomManagement/RoomDetailsModal', [
@@ -181,45 +165,32 @@ class RoomManagementController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
     public function destroyRoomType(Request $request, RoomType $roomType)
     {
         $request->validate([
-            'password' => ['required', 'string'],
+            'password' => ['required'],
         ]);
 
-        // Verify password and ensure user is authenticated
         $currentUser = Auth::user();
+
         if (!$currentUser || !Hash::check($request->password, $currentUser->password)) {
             return back()->withErrors(['password' => 'Incorrect password.']);
         }
 
-        // Check for associated bookings
-        $hasBookings = Booking::whereHas('room', function ($query) use ($roomType) {
-            $query->where('room_type_id', $roomType->id);
-        })->exists();
+        // Prevent delete when bookings exist
+        $hasBookings = Booking::whereHas(
+            'room',
+            fn($q) =>
+            $q->where('room_type_id', $roomType->id)
+        )->exists();
 
         if ($hasBookings) {
             return back()->with('error', 'Cannot delete this room type because it has active bookings.');
         }
 
-        // Delete image if it exists
+        // ✔ Delete image from Supabase
         if ($roomType->image_path) {
-            Storage::delete($roomType->image_path);
+            Storage::disk('supabase')->delete($roomType->image_path);
         }
 
         $roomType->delete();
