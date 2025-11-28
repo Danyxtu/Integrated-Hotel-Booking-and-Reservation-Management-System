@@ -43,7 +43,10 @@ const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
                 <div className="grid gap-6 py-4">
                     <div className="w-full h-64 rounded-lg overflow-hidden">
                         <ImageWithFallback
-                            src={getImageUrl(roomType.image_path, roomType.image_url)}
+                            src={getImageUrl(
+                                roomType.image_path,
+                                roomType.image_url
+                            )}
                             alt={roomType.name}
                             className="w-full h-full object-cover"
                             fallbackComponent={
@@ -127,10 +130,12 @@ const CreateRoomTypeDialog = ({ open, onOpenChange }) => {
 
     const submit = (e) => {
         e.preventDefault();
+        console.log("Stored: Data:", data);
         post(route("admin.room_types.store"), {
             onSuccess: () => {
                 reset();
                 onOpenChange(false);
+                console.log("Stored: Data:", data);
             },
         });
     };
@@ -278,6 +283,7 @@ const EditRoomTypeDialog = ({ roomType, open, onOpenChange }) => {
 
     const submit = (e) => {
         e.preventDefault();
+        console.log("Updated: Data:", data);
         post(route("admin.room_types.update", { roomType: roomType.id }), {
             onSuccess: () => {
                 onOpenChange(false);
