@@ -24,9 +24,9 @@ Route::get('/', function (Request $request) {
             'id' => $roomType->id,
             'name' => $roomType->name,
             'price' => $roomType->price,
-            // Ensure we use the storage URL if it's a file path, or keep it if it's a full URL
-            'image_path' => $roomType->image_url,
-            'features' => $roomType->amenies ? explode(',', $roomType->amenities) : [],
+            'image_path' => $roomType->image_path, // Pass the raw path
+            'image_url'  => $roomType->image_url,  // Pass the full URL from accessor
+            'features' => $roomType->amenities ? explode(',', $roomType->amenities) : [], // Fixed typo
             // Use DB rating, fallback to 4.5 if not set yet
             'rating' => $roomType->rating ?? 4.5,
         ];
