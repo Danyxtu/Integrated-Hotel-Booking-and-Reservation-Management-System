@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Arr;
 
 class RoomManagementController extends Controller
 {
@@ -120,7 +121,7 @@ class RoomManagementController extends Controller
             $validated['image_path'] = $path;
         }
 
-        RoomType::create($validated);
+        RoomType::create(Arr::except($validated, ['image']));
 
         return back()->with('success', 'Room Type added successfully.');
     }
@@ -151,7 +152,7 @@ class RoomManagementController extends Controller
             $validated['image_path'] = $path;
         }
 
-        $roomType->update($validated);
+        $roomType->update(Arr::except($validated, ['image']));
 
         return back()->with('success', 'Room Type updated successfully.');
     }
