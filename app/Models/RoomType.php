@@ -34,18 +34,26 @@ class RoomType extends Model
         if (!$this->image_path) {
             return null;
         }
-        
-        // If using Supabase storage, construct the public URL
-        $disk = Storage::disk('supabase');
+
+        // 1. Get Supabase config values
         $baseUrl = config('filesystems.disks.supabase.url');
-        
-        if ($baseUrl) {
-            // Ensure the path doesn't have a leading slash for proper URL construction
+        $bucket = config('filesystems.disks.supabase.bucket');
+
+        // 2. Manually construct the URL (Most Reliable for Supabase)
+        if ($baseUrl && $bucket) {
             $path = ltrim($this->image_path, '/');
-            return rtrim($baseUrl, '/') . '/' . $path;
+
+            // Clean up: If the path accidentally starts with the bucket name, remove it to avoid duplication
+            if (str_starts_with($path, $bucket . '/')) {
+                $path = substr($path, strlen($bucket) + 1);
+            }
+
+            // Format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
+            return rtrim($baseUrl, '/') . '/' . $bucket . '/' . $path;
         }
-        
-        // Fallback to storage URL if no base URL is configured
-        return $disk->url($this->image_path);
+
+        // 3. Last Resort Fallback (If config is missing)
+        // We return the raw path instead of calling $disk->url() to prevent the "undefined method" error
+        return $this->image_path;
     }
 }

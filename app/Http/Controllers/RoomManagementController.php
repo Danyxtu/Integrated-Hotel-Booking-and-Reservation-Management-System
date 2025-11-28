@@ -114,9 +114,13 @@ class RoomManagementController extends Controller
 
         // ✔ Upload to Supabase
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $path = Storage::disk('supabase')->put('room_type_images', $file);
+            // For Update: Delete old image if it exists
+            if (isset($roomType) && $roomType->image_path) {
+                Storage::disk('supabase')->delete($roomType->image_path);
+            }
 
+            // Upload new image properly
+            $path = $request->file('image')->store('room_type_images', 'supabase'); // ✅ Correct method
             $validated['image_path'] = $path;
         }
 
