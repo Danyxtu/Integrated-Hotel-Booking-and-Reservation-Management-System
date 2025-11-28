@@ -113,10 +113,10 @@ class RoomManagementController extends Controller
             'image'             => 'nullable|image|max:2048',
         ]);
 
-        // Upload to Supabase
+        // Upload to Public disk
         if ($request->hasFile('image')) {
             $path = $request->file('image')
-                ->store('room_type_images', 'supabase');
+                ->store('room_type_images', 'public'); // Changed 'supabase' to 'public'
 
             $validated['image_path'] = $path;
         }
@@ -141,13 +141,13 @@ class RoomManagementController extends Controller
 
         if ($request->hasFile('image')) {
 
-            // Delete old file
+            // Delete old file from Public disk
             if ($roomType->image_path) {
-                Storage::disk('supabase')->delete($roomType->image_path);
+                Storage::disk('public')->delete($roomType->image_path); // Changed 'supabase' to 'public'
             }
 
-            // Upload new file
-            $path = $request->file('image')->store('room_type_images', 'supabase');
+            // Upload new file to Public disk
+            $path = $request->file('image')->store('room_type_images', 'public'); // Changed 'supabase' to 'public'
 
             $validated['image_path'] = $path;
         }
