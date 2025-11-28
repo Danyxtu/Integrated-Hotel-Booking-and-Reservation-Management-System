@@ -38,14 +38,14 @@ class RoomManagementController extends Controller
             });
         }
 
-        if ($request->filled('search')) {
-            $query->where('room_number', 'like', '%' . $request->input('search') . '%');
-        }
-
         $rooms = $query->get();
 
         $roomTypes = RoomType::all();
         $roomStatuses = ['Available', 'Occupied', 'Cleaning', 'Maintenance'];
+
+        if ($request->filled('search')) {
+            $query->where('room_number', 'like', '%' . $request->input('search') . '%');
+        }
 
         return Inertia::render('Admin/RoomManagement/AllRooms', [
             'rooms' => $rooms,
@@ -117,8 +117,7 @@ class RoomManagementController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('room_type_images');
-            $validated['image_path'] = $path;
+            $validated['image_data'] = file_get_contents($request->file('image')->getRealPath());
         }
 
         RoomType::create($validated);
@@ -139,12 +138,7 @@ class RoomManagementController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            // Delete old image if it exists
-            if ($roomType->image_path) {
-                Storage::delete($roomType->image_path);
-            }
-            $path = $request->file('image')->store('room_type_images');
-            $validated['image_path'] = $path;
+            $validated['image_data'] = file_get_contents($request->file('image')->getRealPath());
         }
 
         $roomType->update($validated);
@@ -217,10 +211,6 @@ class RoomManagementController extends Controller
             return back()->with('error', 'Cannot delete this room type because it has active bookings.');
         }
 
-        // Delete image if it exists
-        if ($roomType->image_path) {
-            Storage::delete($roomType->image_path);
-        }
 
         $roomType->delete();
 

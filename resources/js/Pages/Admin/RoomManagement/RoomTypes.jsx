@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+import ImageWithFallback from "@/Components/ImageWithFallback"; // Import the new component
 import "../../../../../storage/app/public/";
 
 const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
@@ -40,15 +41,18 @@ const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-6 py-4">
-                    {roomType.image_url && (
-                        <div className="w-full h-64 rounded-lg overflow-hidden">
-                            <img
-                                src={`https://hkesjqamfhhvwfsozgcj.supabase.co/storage/v1/object/public/room_type_images/${roomType.image_url}`}
-                                alt={roomType.name}
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-                    )}
+                    <div className="w-full h-64 rounded-lg overflow-hidden">
+                        <ImageWithFallback
+                            src={roomType.image_url}
+                            alt={roomType.name}
+                            className="w-full h-full object-cover"
+                            fallbackComponent={
+                                <div className="h-full w-full bg-gray-200 flex items-center justify-center text-gray-500">
+                                    No Image
+                                </div>
+                            }
+                        />
+                    </div>
                     <div className="space-y-4">
                         <div>
                             <Label className="text-sm font-semibold text-gray-500">
@@ -522,17 +526,11 @@ const RoomTypes = ({ roomTypes, flash, errors }) => {
                                 className="relative cursor-pointer"
                                 onClick={() => handleViewDetails(type)}
                             >
-                                {type.image_url ? (
-                                    <img
-                                        src={type.image_url}
-                                        alt={type.name}
-                                        className="h-48 w-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="h-48 w-full bg-gray-200 flex items-center justify-center text-gray-500">
-                                        No Image
-                                    </div>
-                                )}
+                                <ImageWithFallback
+                                    src={type.image_url}
+                                    alt={type.name}
+                                    className="h-48 w-full object-cover"
+                                />
                             </div>
                             <div className="p-4 flex-grow flex flex-col">
                                 <div
@@ -603,3 +601,4 @@ const RoomTypes = ({ roomTypes, flash, errors }) => {
 };
 
 export default RoomTypes;
+
