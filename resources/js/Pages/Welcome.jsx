@@ -164,22 +164,23 @@ export default function Welcome({ rooms, searchParams }) {
                         >
                             Contact
                         </a>
-                        {user ? (
+                        {user && (
                             <Link
                                 href={route("customer.dashboard")}
                                 className="text-gray-700 hover:text-blue-600 font-medium"
                             >
                                 Dashboard
                             </Link>
-                        ) : (
-                            <Link
-                                className=" font-medium bg-blue-600 text-white px-4 py-2 rounded-md"
-                                href={route("login")}
-                            >
-                                Login Here
-                            </Link>
                         )}
                     </nav>
+                    {!user && (
+                        <Link
+                            className=" font-medium bg-blue-600 text-white px-4 py-2 rounded-md"
+                            href={route("login")}
+                        >
+                            Login Here
+                        </Link>
+                    )}
 
                     {/* Mobile menu toggle */}
                     <div className="md:hidden flex items-center">
@@ -254,7 +255,6 @@ export default function Welcome({ rooms, searchParams }) {
                     </nav>
                 </div>
             )}
-
 
             {/* Hero */}
             <section className="relative pt-32 pb-20 px-6 overflow-hidden">
