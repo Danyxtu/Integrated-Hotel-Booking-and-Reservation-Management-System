@@ -26,7 +26,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import ImageWithFallback from "@/Components/ImageWithFallback"; // Import the new component
-import "../../../../../storage/app/public/";
 
 const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
     if (!roomType) return null;
@@ -601,4 +600,3 @@ const RoomTypes = ({ roomTypes, flash, errors }) => {
 };
 
 export default RoomTypes;
-
