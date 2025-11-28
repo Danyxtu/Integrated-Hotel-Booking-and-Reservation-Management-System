@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('room_types', function (Blueprint $table) {
-            $table->longText('image_data')->nullable()->after('image_path');
+            $table->binary('image_data')->nullable()->after('image_path');
             $table->dropColumn('image_path');
         });
     }
