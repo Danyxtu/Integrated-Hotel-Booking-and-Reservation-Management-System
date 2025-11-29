@@ -425,7 +425,7 @@ export default function Welcome({ rooms, searchParams }) {
                         {standardRoom && (
                             <>
                                 <img
-                                    src={`/storage/public/${standardRoom.image_path}`}
+                                    src={`/storage/${standardRoom.image_path}`}
                                     alt={standardRoom.name}
                                     className="relative rounded-3xl shadow-2xl w-full h-[600px] object-cover"
                                 />
@@ -508,7 +508,7 @@ export default function Welcome({ rooms, searchParams }) {
                             >
                                 <div className="relative overflow-hidden h-64">
                                     <img
-                                        src={`/storage/public/${room.image_path}`}
+                                        src={`/storage/${room.image_path}`}
                                         alt={room.name}
                                         className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                     />

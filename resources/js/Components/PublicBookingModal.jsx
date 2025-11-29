@@ -261,7 +261,7 @@ const PublicBookingModal = ({
                                     <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                                         <img
                                             src={
-                                                `/storage/public/${room.image_path}` ||
+                                                `/storage/${room.image_path}` ||
                                                 room.image_url ||
                                                 room.room_type?.image_url ||
                                                 "https://via.placeholder.com/120x120?text=LuxStay"
@@ -306,7 +306,7 @@ const PublicBookingModal = ({
                         <div className="bg-gray-100 rounded-lg overflow-hidden h-80">
                             <img
                                 src={
-                                    `/storage/public/${selectedRoom.image_path}` ||
+                                    `/storage/${selectedRoom.image_path}` ||
                                     selectedRoom.image_url ||
                                     selectedRoom.room_type?.image_url ||
                                     `https://via.placeholder.com/600x400?text=${selectedRoom.name}`

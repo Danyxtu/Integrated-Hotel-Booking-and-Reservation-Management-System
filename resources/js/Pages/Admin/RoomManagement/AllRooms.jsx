@@ -271,7 +271,7 @@ const AllRooms = ({
                             <div className="relative">
                                 {room.room_type?.image_path ? (
                                     <img
-                                        src={`/storage/public/${room.room_type.image_path}`}
+                                        src={`/storage/${room.room_type.image_path}`}
                                         alt={room.room_type.name}
                                         className="h-48 w-full object-cover"
                                     />

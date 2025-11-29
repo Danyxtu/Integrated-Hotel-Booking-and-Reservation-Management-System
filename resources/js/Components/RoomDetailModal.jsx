@@ -40,9 +40,9 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
     });
 
     const images = room.image_path
-        ? [`/storage/public/${room.image_path}`]
+        ? [`/storage/${room.image_path}`]
         : room.images && room.images.length > 0
-        ? room.images.map((img) => `/storage/public/${img}`)
+        ? room.images.map((img) => `/storage/${img}`)
         : ["https://via.placeholder.com/600x400"];
 
     const nextImage = () => {

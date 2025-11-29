@@ -275,7 +275,7 @@ export default function Rooms({
                                         className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
                                     >
                                         <img
-                                            src={`/storage/public/${room.image_path}`}
+                                            src={`/storage/${room.image_path}`}
                                             alt={room.name}
                                             className="w-full h-48 object-cover"
                                         />

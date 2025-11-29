@@ -29,9 +29,7 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
             <div className="flex flex-col md:flex-row">
                 <div className="md:w-72 md:min-w-[288px] h-56 md:h-auto md:min-h-[280px] flex-shrink-0 relative">
                     <img
-                        src={`/storage/public/${
-                            room.image_path || room.images?.[0]
-                        }`}
+                        src={`/storage/${room.image_path || room.images?.[0]}`}
                         alt={
                             room.room_type?.name ||
                             room.roomType?.name ||
