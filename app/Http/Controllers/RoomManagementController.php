@@ -112,11 +112,9 @@ class RoomManagementController extends Controller
             'amenities'         => 'nullable|string',
             'image'             => 'nullable|image|max:2048',
         ]);
-
-        // Upload to Public disk
         if ($request->hasFile('image')) {
             $path = $request->file('image')
-                ->store('room_type_images', 'public'); // Changed 'supabase' to 'public'
+                ->store('room_type_images', 'public');
 
             $validated['image_path'] = $path;
         }
@@ -141,13 +139,11 @@ class RoomManagementController extends Controller
 
         if ($request->hasFile('image')) {
 
-            // Delete old file from Public disk
             if ($roomType->image_path) {
-                Storage::disk('public')->delete($roomType->image_path); // Changed 'supabase' to 'public'
+                Storage::disk('public')->delete($roomType->image_path);
             }
 
-            // Upload new file to Public disk
-            $path = $request->file('image')->store('room_type_images', 'public'); // Changed 'supabase' to 'public'
+            $path = $request->file('image')->store('room_type_images', 'public');
 
             $validated['image_path'] = $path;
         }
@@ -190,9 +186,9 @@ class RoomManagementController extends Controller
             return back()->with('error', 'Cannot delete this room type because it has active bookings.');
         }
 
-        // ✔ Delete image from Supabase
+        // ✔ Delete image from S3
         if ($roomType->image_path) {
-            Storage::disk('supabase')->delete($roomType->image_path);
+            Storage::disk('s3')->delete($roomType->image_path);
         }
 
         $roomType->delete();

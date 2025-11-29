@@ -532,10 +532,9 @@ const RoomTypes = ({ roomTypes, flash, errors }) => {
                                 className="relative cursor-pointer"
                                 onClick={() => handleViewDetails(type)}
                             >
-                                <ImageWithFallback
-                                    src={type.image_url}
-                                    alt={type.name}
-                                    className="h-48 w-full object-cover"
+                                <img
+                                    src={`/storage/${roomType.image_path}`}
+                                    alt={roomType.name}
                                 />
                             </div>
                             <div className="p-4 flex-grow flex flex-col">

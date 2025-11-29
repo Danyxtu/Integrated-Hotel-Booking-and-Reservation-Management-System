@@ -393,7 +393,7 @@ export default function Welcome({ rooms, searchParams }) {
                         {standardRoom && (
                             <>
                                 <img
-                                    src={getImageUrl(standardRoom.image_path, standardRoom.image_url || standardRoom.room_type?.image_url)}
+                                    src={getImageUrl(standardRoom.image_path)}
                                     alt={standardRoom.name}
                                     className="relative rounded-3xl shadow-2xl w-full h-[600px] object-cover"
                                 />
@@ -473,7 +473,7 @@ export default function Welcome({ rooms, searchParams }) {
                             >
                                 <div className="relative overflow-hidden h-64">
                                     <img
-                                        src={getImageUrl(room.image_path, room.image_url || room.room_type?.image_url)}
+                                        src={getImageUrl(room.image_path)}
                                         alt={room.name}
                                         className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                     />

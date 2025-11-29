@@ -35,7 +35,7 @@ class RoomType extends Model
             return null;
         }
 
-        // Use the public disk to get the URL
+        // Use the s3 disk to get the URL
         return Storage::disk('public')->url($this->image_path);
     }
 }
