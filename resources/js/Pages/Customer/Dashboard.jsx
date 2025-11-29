@@ -12,7 +12,7 @@ const Dashboard = ({
     recentActivity,
 }) => {
     const { auth } = usePage().props;
-    const user = auth.user || {}; // Fallback for user object
+    const user = auth.user || {};
 
     const stats = [
         {
@@ -76,7 +76,6 @@ const Dashboard = ({
                                 >
                                     <div>
                                         <p className="font-semibold">
-                                            {reservation.hotel_name} -{" "}
                                             {reservation.room_type_name}
                                         </p>
                                         <p className="text-sm text-gray-500">

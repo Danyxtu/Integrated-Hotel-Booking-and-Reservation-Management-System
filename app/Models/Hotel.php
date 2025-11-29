@@ -19,7 +19,8 @@ class Hotel extends Model
         'email',
     ];
 
-    public function rooms(){
-        return $this->hasMany('rooms');
+    public function rooms()
+    {
+        return $this->hasMany(Room::class);
     }
 }

@@ -17,6 +17,8 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
     const { startDate, endDate } = filters;
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [step, setStep] = useState(1); // 1: Details, 2: Payment
+    // track the selected payment key separately from the value sent to backend
+    const [selectedMethodKey, setSelectedMethodKey] = useState(null); // 'pay_now' | 'pay_later'
 
     let totalNights = 0;
     if (startDate && endDate) {
@@ -56,7 +58,15 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
     };
 
     const handlePaymentSelect = (method) => {
-        setData("payment_method", method);
+        // For backend compatibility: 'pay_now' should map to 'gcash' (uses PayMongo flow)
+        setSelectedMethodKey(method);
+        if (method === "pay_now") {
+            setData("payment_method", "gcash");
+        } else if (method === "pay_later") {
+            setData("payment_method", "pay_later");
+        } else {
+            setData("payment_method", method);
+        }
     };
 
     const handleConfirmBooking = () => {
@@ -65,10 +75,26 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
             return;
         }
 
+        // If user chose Pay Later, we want to close the modal and show a friendly message
+        if (selectedMethodKey === "pay_later") {
+            post(route("bookings.public.store"), {
+                onSuccess: () => {
+                    alert(
+                        "Reservation received! Please check your email for payment instructions."
+                    );
+                    onClose();
+                },
+                onError: (err) => {
+                    console.error("Booking failed", err);
+                    alert("Failed to book room. Please check your details.");
+                },
+            });
+            return;
+        }
+
+        // For Pay Now (gcash/card/paymaya/etc) we let the backend redirect to PayMongo.
+        // Don't prematurely close the modal; Inertia will handle the external redirect returned by the server.
         post(route("bookings.public.store"), {
-            onSuccess: () => {
-                onClose();
-            },
             onError: (err) => {
                 console.error("Booking failed", err);
                 alert("Failed to book room. Please check your details.");
@@ -184,7 +210,7 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
                                         handlePaymentSelect("pay_now")
                                     }
                                     className={`p-6 rounded-xl border-2 cursor-pointer transition flex items-center gap-4 ${
-                                        data.payment_method === "pay_now"
+                                        selectedMethodKey === "pay_now"
                                             ? "border-blue-600 bg-blue-50"
                                             : "border-gray-200 hover:border-blue-300"
                                     }`}
@@ -202,7 +228,7 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
                                             GCash, or PayMaya.
                                         </p>
                                     </div>
-                                    {data.payment_method === "pay_now" && (
+                                    {selectedMethodKey === "pay_now" && (
                                         <CheckCircle className="w-6 h-6 text-blue-600 ml-auto" />
                                     )}
                                 </div>
@@ -212,7 +238,7 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
                                         handlePaymentSelect("pay_later")
                                     }
                                     className={`p-6 rounded-xl border-2 cursor-pointer transition flex items-center gap-4 ${
-                                        data.payment_method === "pay_later"
+                                        selectedMethodKey === "pay_later"
                                             ? "border-green-600 bg-green-50"
                                             : "border-gray-200 hover:border-green-300"
                                     }`}
@@ -229,7 +255,7 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
                                             hotel front desk.
                                         </p>
                                     </div>
-                                    {data.payment_method === "pay_later" && (
+                                    {selectedMethodKey === "pay_later" && (
                                         <CheckCircle className="w-6 h-6 text-green-600 ml-auto" />
                                     )}
                                 </div>

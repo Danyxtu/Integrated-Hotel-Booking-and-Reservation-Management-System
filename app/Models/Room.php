@@ -10,9 +10,10 @@ class Room extends Model
 {
     /** @use HasFactory<\Database\Factories\RoomFactory> */
     use HasFactory;
-    
+
     protected $fillable = [
         'room_number',
+        'hotel_id',
         'room_type_id',
         'status',
     ];
@@ -21,7 +22,16 @@ class Room extends Model
         'status' => RoomStatus::class,
     ];
 
-    public function roomType(){
+    public function roomType()
+    {
         return $this->belongsTo(RoomType::class);
+    }
+
+    /**
+     * The hotel that this room belongs to.
+     */
+    public function hotel()
+    {
+        return $this->belongsTo(Hotel::class);
     }
 }

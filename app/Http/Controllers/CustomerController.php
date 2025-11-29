@@ -64,7 +64,7 @@ class CustomerController extends Controller
             'recentActivity' => $recentActivity->map(function ($booking) {
                 return [
                     'id' => $booking->id,
-                    'description' => 'Booked ' . ($booking->room->roomType->name ?? 'Room') . ' at ' . ($booking->room->hotel->name ?? 'N/A'),
+                    'description' => 'Booked ' . ($booking->room->roomType->name ?? 'Room') . ' at ' . 'LuxStay Hotel',
                     'date' => $booking->created_at->diffForHumans(),
                 ];
             }),
