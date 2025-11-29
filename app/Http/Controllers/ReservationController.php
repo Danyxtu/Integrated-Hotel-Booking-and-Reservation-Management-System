@@ -4,27 +4,65 @@ namespace App\Http\Controllers;
 
 use App\Enums\RoomStatus;
 use App\Models\Booking;
+use App\Models\Customer;
 use App\Models\Room; // Import the Room model
 use Carbon\Carbon; // Import Carbon for date manipulation
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class ReservationController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function showCustomerReservations()
     {
-        //
+        $user = Auth::user();
+        $customer = Customer::where('user_id', $user->id)->first();
+
+        if (!$customer) {
+            return Inertia::render('Customer/Reservations', [
+                'reservations' => [],
+            ]);
+        }
+
+        $reservations = Booking::where('customer_id', $customer->id)
+            ->with(['room.roomType', 'room.hotel', 'payment'])
+            ->orderBy('check_in_date', 'desc')
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'booking_reference' => $booking->booking_number ?? 'BK-' . $booking->id,
+                    'check_in_date' => $booking->check_in_date->format('Y-m-d'),
+                    'check_out_date' => $booking->check_out_date->format('Y-m-d'),
+                    'room' => [
+                        'price' => $booking->room->roomType->price ?? 0,
+                        'hotel' => [
+                            'name' => $booking->room->hotel->name ?? 'N/A',
+                        ],
+                        'room_type' => [
+                            'name' => $booking->room->roomType->name ?? 'N/A',
+                        ],
+                        'room_number' => $booking->room->room_number ?? null,
+                        'bed_configuration' => $booking->room->roomType->amenities ?? 'N/A',
+                    ],
+                    'num_adults' => $booking->num_adults ?? 1,
+                    'num_children' => $booking->num_children ?? 0,
+                    'payment_status' => $booking->payment->status ?? 'pending',
+                ];
+            });
+
+        return Inertia::render('Customer/Reservations', [
+            'reservations' => $reservations,
+        ]);
     }
 
-     public function showAllBookings(){
+    public function showAllBookings()
+    {
         $allBookings = Booking::with(['customer', 'room.roomType'])
             ->get()
-            ->map(function($booking) {
+            ->map(function ($booking) {
                 // Add a status_label based on the booking status
-                $booking->status_label = match($booking->status) {
+                $booking->status_label = match ($booking->status) {
                     'Pending'     => 'badge-yellow',
                     'Confirmed'   => 'badge-blue',
                     'Cancelled'   => 'badge-red',
@@ -44,12 +82,13 @@ class ReservationController extends Controller
             'rooms'     => $rooms, // Pass rooms to the view
         ]);
     }
-    public function showCheckInsToday(){
+    public function showCheckInsToday()
+    {
         $today = Carbon::today()->toDateString();
         $checkInsToday = Booking::with(['customer', 'room.roomType'])
             ->whereDate('check_in_date', $today)
             ->get()
-            ->map(function($booking) {
+            ->map(function ($booking) {
                 // Since status is now enum string, status_label can just be status
                 $booking->status_label = $booking->status;
                 return $booking;
@@ -59,15 +98,16 @@ class ReservationController extends Controller
             'checkInsToday' => $checkInsToday,
         ]);
     }
-    public function showCheckoutsToday(){
+    public function showCheckoutsToday()
+    {
         $today = Carbon::today()->toDateString();
         $checkouts = Booking::with(['customer', 'room.roomType'])
             ->where(function ($query) use ($today) {
                 $query->whereDate('check_out_date', $today)
-                      ->orWhere('status', 'Checked Out');
+                    ->orWhere('status', 'Checked Out');
             })
             ->get()
-            ->map(function($booking) {
+            ->map(function ($booking) {
                 $booking->status_label = $booking->status;
                 return $booking;
             });
@@ -76,11 +116,12 @@ class ReservationController extends Controller
             'checkouts' => $checkouts,
         ]);
     }
-    public function showPending(){
+    public function showPending()
+    {
         $pendingBookings = Booking::with(['customer', 'room.roomType'])
             ->whereIn('status', ['Pending', 'Confirmed'])
             ->get()
-            ->map(function($booking) {
+            ->map(function ($booking) {
                 $booking->status_label = $booking->status;
                 return $booking;
             });
@@ -169,4 +210,3 @@ class ReservationController extends Controller
         //
     }
 }
-

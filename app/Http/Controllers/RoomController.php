@@ -32,17 +32,17 @@ class RoomController extends Controller
             $bookedRoomIds = Booking::whereIn('status', ['Confirmed', 'Checked In'])
                 ->where(function ($query) use ($startDate, $endDate) {
                     $query->where('check_in_date', '<', $endDate)
-                          ->where('check_out_date', '>', $startDate);
+                        ->where('check_out_date', '>', $startDate);
                 })
                 ->pluck('room_id');
-            
+
             $query->whereNotIn('id', $bookedRoomIds);
         }
 
         if ($adults || $children) {
             $query->whereHas('roomType', function ($subQuery) use ($adults, $children) {
                 $subQuery->where('capacity_adults', '>=', $adults)
-                         ->where('capacity_children', '>=', $children);
+                    ->where('capacity_children', '>=', $children);
             });
         }
 
@@ -59,7 +59,7 @@ class RoomController extends Controller
                 'name' => $room->roomType->name,
                 'description' => $room->roomType->description,
                 'price' => $room->roomType->price,
-                'image_path' => $room->roomType->image_url ?? 'https://via.placeholder.com/600x400',
+                'image_path' => $room->roomType->image_path ?? 'room_type_images/placeholder.jpg',
                 'features' => explode(',', $room->roomType->amenities),
                 'rating' => 4.5, // Placeholder rating
                 'capacity_adults' => $room->roomType->capacity_adults,

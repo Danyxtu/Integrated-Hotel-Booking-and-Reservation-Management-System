@@ -1,7 +1,6 @@
 import React from "react";
 import { differenceInDays } from "date-fns";
 import { Wifi, Wind, Bed, Users, Star } from "lucide-react";
-import { getImageUrl } from "@/utils/imageUrl";
 
 const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
     const { startDate, endDate } = filters;

@@ -121,9 +121,7 @@ Route::middleware(['auth', 'role:user'])
     ->name('customer.')
     ->group(function () {
         Route::get('/dashboard', [CustomerController::class, 'index'])->name('dashboard');
-        Route::get('/reservations', function () {
-            return Inertia::render('Customer/Reservations');
-        })->name('reservations');
+        Route::get('/reservations', [ReservationController::class, 'showCustomerReservations'])->name('reservations');
         Route::get('/rooms', [RoomController::class, 'index'])->name('rooms');
         Route::post('/rooms/check-availability', [BookingController::class, 'checkAvailability'])->name('rooms.checkAvailability');
         Route::get('/settings', [ProfileController::class, 'customerSettings'])->name('settings');
