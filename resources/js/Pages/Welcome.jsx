@@ -15,6 +15,7 @@ import {
     Baby,
     Menu,
     X,
+    PesoSign,
 } from "lucide-react";
 import { Link, usePage } from "@inertiajs/react";
 import PublicBookingModal from "@/Components/PublicBookingModal";
@@ -401,12 +402,15 @@ export default function Welcome({ rooms, searchParams }) {
                                             <p className="text-sm text-gray-600 mb-1">
                                                 Starting from
                                             </p>
-                                            <p className="text-3xl font-bold text-gray-900">
-                                                ${standardRoom.price}
-                                                <span className="text-lg text-gray-500">
-                                                    /night
-                                                </span>
-                                            </p>
+                                            <div className="flex items-center gap-1">
+                                                <PesoSign className="w-6 h-6 text-gray-900" />
+                                                <p className="text-3xl font-bold text-gray-900">
+                                                    {standardRoom.price}
+                                                    <span className="text-lg text-gray-500">
+                                                        /night
+                                                    </span>
+                                                </p>
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-1 px-4 py-2 bg-yellow-50 rounded-full">
                                             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -501,12 +505,15 @@ export default function Welcome({ rooms, searchParams }) {
                                             <p className="text-sm text-gray-500">
                                                 From
                                             </p>
-                                            <p className="text-3xl font-bold text-gray-900">
-                                                ${room.price}
-                                                <span className="text-lg text-gray-500">
-                                                    /night
-                                                </span>
-                                            </p>
+                                            <div className="flex items-center gap-1">
+                                                <PesoSign className="w-6 h-6 text-gray-900" />
+                                                <p className="text-3xl font-bold text-gray-900">
+                                                    {room.price}
+                                                    <span className="text-lg text-gray-500">
+                                                        /night
+                                                    </span>
+                                                </p>
+                                            </div>
                                         </div>
                                         <button
                                             onClick={handleBookingRequest}
