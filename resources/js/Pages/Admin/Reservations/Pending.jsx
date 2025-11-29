@@ -91,9 +91,7 @@ const Pending = ({ pendingBookings }) => {
 
     const handleUpdateStatus = (bookingId, status) => {
         if (
-            confirm(
-                `Are you sure you want to mark this booking as ${status}?`
-            )
+            confirm(`Are you sure you want to mark this booking as ${status}?`)
         ) {
             router.put(
                 route("admin.bookings.updateStatus", { booking: bookingId }),
@@ -114,7 +112,8 @@ const Pending = ({ pendingBookings }) => {
                             Pending Reservations
                         </h1>
                         <p className="text-gray-500 mt-1">
-                            Manage and view pending and confirmed guest bookings.
+                            Manage and view pending and confirmed guest
+                            bookings.
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -189,7 +188,7 @@ const Pending = ({ pendingBookings }) => {
                                         {booking.room?.room_type?.name}
                                     </td>
                                     <td className="px-6 py-4 font-mono text-right">
-                                        $
+                                        ₱
                                         {parseFloat(
                                             booking.total_price
                                         ).toFixed(2)}

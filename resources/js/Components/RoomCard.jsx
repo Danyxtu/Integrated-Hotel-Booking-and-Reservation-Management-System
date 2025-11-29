@@ -29,7 +29,9 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
             <div className="flex flex-col md:flex-row">
                 <div className="md:w-72 md:min-w-[288px] h-56 md:h-auto md:min-h-[280px] flex-shrink-0 relative">
                     <img
-                        src={getImageUrl(room.image_path || room.images?.[0], room.image_url || room.room_type?.image_url)}
+                        src={`/storage/public/${
+                            room.image_path || room.images?.[0]
+                        }`}
                         alt={
                             room.room_type?.name ||
                             room.roomType?.name ||
@@ -105,7 +107,7 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
                             <div className="mb-4">
                                 <div className="flex items-baseline justify-end mb-1">
                                     <span className="text-3xl font-bold text-gray-900">
-                                        ${room.price}
+                                        ₱{room.price}
                                     </span>
                                     <span className="text-sm text-gray-600 ml-1">
                                         /night
@@ -118,7 +120,7 @@ const RoomCard = ({ room, filters, onSelectRoom, isAvailable }) => {
                                             {totalNights > 1 ? "s" : ""}
                                         </p>
                                         <p className="text-lg font-bold text-blue-900">
-                                            $
+                                            ₱
                                             {(room.price * totalNights).toFixed(
                                                 2
                                             )}

@@ -1,6 +1,18 @@
 import React, { useState } from "react";
 import AdminLayout from "@/Layouts/AdminLayout";
-import { Search, DollarSign, CreditCard, Banknote, Clock, CheckCircle2, XCircle, ShieldCheck, Mail, FileText, Eye } from "lucide-react"; // Added Eye icon
+import {
+    Search,
+    DollarSign,
+    CreditCard,
+    Banknote,
+    Clock,
+    CheckCircle2,
+    XCircle,
+    ShieldCheck,
+    Mail,
+    FileText,
+    Eye,
+} from "lucide-react"; // Added Eye icon
 import { router } from "@inertiajs/react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -25,7 +37,6 @@ import { Label } from "@/components/ui/label"; // Assuming Label component exist
 //     SelectTrigger,
 //     SelectValue,
 // } from "@/components/ui/select";
-
 
 const statusStyles = {
     Pending: {
@@ -61,47 +72,88 @@ const methodIcons = {
 };
 
 // --- Confirmation Dialogs (adapted to be called from PaymentDetailsDialog) ---
-const ConfirmPaymentDialog = ({ payment, open, onOpenChange, onConfirm, isProcessing }) => {
+const ConfirmPaymentDialog = ({
+    payment,
+    open,
+    onOpenChange,
+    onConfirm,
+    isProcessing,
+}) => {
     if (!payment) return null;
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Payment Completion?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                        Confirm Payment Completion?
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                        Are you sure you want to mark payment #{payment.id} for booking #{payment.booking?.booking_number} as Completed? This action cannot be undone.
+                        Are you sure you want to mark payment #{payment.id} for
+                        booking #{payment.booking?.booking_number} as Completed?
+                        This action cannot be undone.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onConfirm(payment.id, 'Completed')} disabled={isProcessing}>Confirm</AlertDialogAction>
+                    <AlertDialogCancel disabled={isProcessing}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={() => onConfirm(payment.id, "Completed")}
+                        disabled={isProcessing}
+                    >
+                        Confirm
+                    </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     );
 };
 
-const CancelPaymentDialog = ({ payment, open, onOpenChange, onConfirm, isProcessing }) => {
+const CancelPaymentDialog = ({
+    payment,
+    open,
+    onOpenChange,
+    onConfirm,
+    isProcessing,
+}) => {
     if (!payment) return null;
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Payment Cancellation?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                        Confirm Payment Cancellation?
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                        Are you sure you want to mark payment #{payment.id} for booking #{payment.booking?.booking_number} as Cancelled? This action cannot be undone.
+                        Are you sure you want to mark payment #{payment.id} for
+                        booking #{payment.booking?.booking_number} as Cancelled?
+                        This action cannot be undone.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onConfirm(payment.id, 'Cancelled')} disabled={isProcessing}>Confirm</AlertDialogAction>
+                    <AlertDialogCancel disabled={isProcessing}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={() => onConfirm(payment.id, "Cancelled")}
+                        disabled={isProcessing}
+                    >
+                        Confirm
+                    </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     );
 };
 
-const RefundPaymentDialog = ({ payment, open, onOpenChange, onConfirm, isProcessing, refundReason }) => {
+const RefundPaymentDialog = ({
+    payment,
+    open,
+    onOpenChange,
+    onConfirm,
+    isProcessing,
+    refundReason,
+}) => {
     if (!payment) return null;
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -109,14 +161,27 @@ const RefundPaymentDialog = ({ payment, open, onOpenChange, onConfirm, isProcess
                 <AlertDialogHeader>
                     <AlertDialogTitle>Confirm Payment Refund?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Are you sure you want to refund payment #{payment.id} for booking #{payment.booking?.booking_number}?
-                        <p className="mt-2 text-sm text-gray-700">Reason: <span className="font-semibold">{refundReason}</span></p>
+                        Are you sure you want to refund payment #{payment.id}{" "}
+                        for booking #{payment.booking?.booking_number}?
+                        <p className="mt-2 text-sm text-gray-700">
+                            Reason:{" "}
+                            <span className="font-semibold">
+                                {refundReason}
+                            </span>
+                        </p>
                         This action cannot be undone.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onConfirm(payment.id, refundReason)} disabled={isProcessing}>Confirm Refund</AlertDialogAction>
+                    <AlertDialogCancel disabled={isProcessing}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={() => onConfirm(payment.id, refundReason)}
+                        disabled={isProcessing}
+                    >
+                        Confirm Refund
+                    </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
@@ -132,10 +197,14 @@ const PaymentDetailsDialog = ({
     onRefund, // Callback for Refund
     isProcessing,
     // Props to control nested confirmation dialogs
-    isConfirmDialogOpen, setIsConfirmDialogOpen,
-    isCancelDialogOpen, setIsCancelDialogOpen,
-    isRefundDialogOpen, setIsRefundDialogOpen,
-    refundReason, setRefundReason,
+    isConfirmDialogOpen,
+    setIsConfirmDialogOpen,
+    isCancelDialogOpen,
+    setIsCancelDialogOpen,
+    isRefundDialogOpen,
+    setIsRefundDialogOpen,
+    refundReason,
+    setRefundReason,
 }) => {
     const [isRefundReasonVisible, setIsRefundReasonVisible] = useState(false);
 
@@ -162,63 +231,103 @@ const PaymentDetailsDialog = ({
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent className="sm:max-w-[800px]">
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Payment Details #{payment.id}</AlertDialogTitle>
+                    <AlertDialogTitle>
+                        Payment Details #{payment.id}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                        Review details and take action for payment #{payment.id}.
+                        Review details and take action for payment #{payment.id}
+                        .
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="py-4 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <p className="text-sm font-semibold">Booking Number:</p>
-                            <p className="text-gray-700">{payment.booking?.booking_number}</p>
+                            <p className="text-sm font-semibold">
+                                Booking Number:
+                            </p>
+                            <p className="text-gray-700">
+                                {payment.booking?.booking_number}
+                            </p>
                         </div>
                         <div>
                             <p className="text-sm font-semibold">Guest Name:</p>
-                            <p className="text-gray-700">{payment.booking?.customer?.first_name} {payment.booking?.customer?.last_name}</p>
+                            <p className="text-gray-700">
+                                {payment.booking?.customer?.first_name}{" "}
+                                {payment.booking?.customer?.last_name}
+                            </p>
                         </div>
                         <div>
                             <p className="text-sm font-semibold">Amount:</p>
-                            <p className="text-gray-700">${parseFloat(payment.amount).toFixed(2)}</p>
+                            <p className="text-gray-700">
+                                ₱{parseFloat(payment.amount).toFixed(2)}
+                            </p>
                         </div>
                         <div>
-                            <p className="text-sm font-semibold">Payment Method:</p>
-                            <p className="text-gray-700">{payment.payment_method}</p>
+                            <p className="text-sm font-semibold">
+                                Payment Method:
+                            </p>
+                            <p className="text-gray-700">
+                                {payment.payment_method}
+                            </p>
                         </div>
                         <div>
-                            <p className="text-sm font-semibold">Payment Date:</p>
-                            <p className="text-gray-700">{new Date(payment.payment_date).toLocaleDateString()}</p>
+                            <p className="text-sm font-semibold">
+                                Payment Date:
+                            </p>
+                            <p className="text-gray-700">
+                                {new Date(
+                                    payment.payment_date
+                                ).toLocaleDateString()}
+                            </p>
                         </div>
                         <div>
                             <p className="text-sm font-semibold">Status:</p>
                             <p className="text-gray-700">{payment.status}</p>
                         </div>
-                         {payment.status === 'Refunded' && payment.refund_reason && (
-                            <div className="col-span-2">
-                                <p className="text-sm font-semibold">Refund Reason:</p>
-                                <p className="text-gray-700">{payment.refund_reason}</p>
-                            </div>
-                        )}
+                        {payment.status === "Refunded" &&
+                            payment.refund_reason && (
+                                <div className="col-span-2">
+                                    <p className="text-sm font-semibold">
+                                        Refund Reason:
+                                    </p>
+                                    <p className="text-gray-700">
+                                        {payment.refund_reason}
+                                    </p>
+                                </div>
+                            )}
                     </div>
 
                     {isRefundReasonVisible && (
                         <div className="space-y-2 mt-4">
-                            <Label htmlFor="refundReason">Reason for Refund</Label>
+                            <Label htmlFor="refundReason">
+                                Reason for Refund
+                            </Label>
                             <Input
                                 id="refundReason"
                                 value={refundReason}
-                                onChange={(e) => setRefundReason(e.target.value)}
+                                onChange={(e) =>
+                                    setRefundReason(e.target.value)
+                                }
                                 placeholder="e.g., Customer requested, overcharged"
                                 disabled={isProcessing}
                             />
-                            {refundReason.length === 0 && <p className="text-red-500 text-sm">Reason is required to proceed with refund.</p>}
+                            {refundReason.length === 0 && (
+                                <p className="text-red-500 text-sm">
+                                    Reason is required to proceed with refund.
+                                </p>
+                            )}
                         </div>
                     )}
                 </div>
 
                 <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => onOpenChange(false)} disabled={isProcessing}>Close</AlertDialogCancel>
-                    {payment.status === 'Pending' && (
+                    <AlertDialogCancel
+                        onClick={() => onOpenChange(false)}
+                        disabled={isProcessing}
+                    >
+                        Close
+                    </AlertDialogCancel>
+                    {payment.status === "Pending" && (
                         <>
                             <Button
                                 variant="destructive"
@@ -231,10 +340,16 @@ const PaymentDetailsDialog = ({
                             <Button
                                 variant="warning" // Assuming a 'warning' variant exists for yellow color
                                 onClick={handleRefundAction}
-                                disabled={isProcessing || (isRefundReasonVisible && refundReason.length === 0)}
+                                disabled={
+                                    isProcessing ||
+                                    (isRefundReasonVisible &&
+                                        refundReason.length === 0)
+                                }
                             >
                                 <DollarSign className="w-4 h-4 mr-1" />
-                                {isRefundReasonVisible ? 'Confirm Refund' : 'Refund Payment'}
+                                {isRefundReasonVisible
+                                    ? "Confirm Refund"
+                                    : "Refund Payment"}
                             </Button>
                             <Button
                                 variant="success"
@@ -252,100 +367,108 @@ const PaymentDetailsDialog = ({
     );
 };
 
-
 const PendingPayments = ({ payments, statuses }) => {
     const { toast } = useToast();
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState("");
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false); // New state for details dialog
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
     const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
     const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false); // New state for refund dialog
-    const [refundReason, setRefundReason] = useState(''); // New state for refund reason
+    const [refundReason, setRefundReason] = useState(""); // New state for refund reason
     const [isProcessing, setIsProcessing] = useState(false);
 
     const executeStatusUpdate = (paymentId, newStatus) => {
         setIsProcessing(true);
-        router.patch(route('admin.payments.updateStatus', paymentId), { status: newStatus }, {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                setIsConfirmDialogOpen(false);
-                setIsCancelDialogOpen(false);
-                setIsDetailsDialogOpen(false); // Close details dialog after action
-                setSelectedPayment(null);
-                toast({
-                    title: "Success",
-                    description: `Payment #${paymentId} status updated to ${newStatus}.`,
-                    variant: "success",
-                });
-            },
-            onError: (error) => {
-                console.error("Payment status update failed:", error); // Log the full error object
-                let errorMessage = "Failed to update payment status.";
-                if (error && typeof error === 'object') {
-                    if (error.status) {
-                        errorMessage += ` Status Code: ${error.status}.`;
+        router.patch(
+            route("admin.payments.updateStatus", paymentId),
+            { status: newStatus },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    setIsConfirmDialogOpen(false);
+                    setIsCancelDialogOpen(false);
+                    setIsDetailsDialogOpen(false); // Close details dialog after action
+                    setSelectedPayment(null);
+                    toast({
+                        title: "Success",
+                        description: `Payment #${paymentId} status updated to ${newStatus}.`,
+                        variant: "success",
+                    });
+                },
+                onError: (error) => {
+                    console.error("Payment status update failed:", error); // Log the full error object
+                    let errorMessage = "Failed to update payment status.";
+                    if (error && typeof error === "object") {
+                        if (error.status) {
+                            errorMessage += ` Status Code: ${error.status}.`;
+                        }
+                        if (error.message) {
+                            errorMessage = error.message;
+                        } else if (Object.keys(error).length > 0) {
+                            const firstErrorKey = Object.keys(error)[0];
+                            errorMessage = error[firstErrorKey];
+                        }
                     }
-                    if (error.message) {
-                        errorMessage = error.message;
-                    } else if (Object.keys(error).length > 0) {
-                        const firstErrorKey = Object.keys(error)[0];
-                        errorMessage = error[firstErrorKey];
-                    }
-                }
-                toast({
-                    title: "Error",
-                    description: errorMessage,
-                    variant: "destructive",
-                });
-            },
-            onFinish: () => {
-                setIsProcessing(false);
+                    toast({
+                        title: "Error",
+                        description: errorMessage,
+                        variant: "destructive",
+                    });
+                },
+                onFinish: () => {
+                    setIsProcessing(false);
+                },
             }
-        });
+        );
     };
 
     const executeRefund = (paymentId, reason) => {
         setIsProcessing(true);
-        router.patch(route('admin.payments.refund', paymentId), { reason: reason }, { // New route, using PATCH as it's an update to the payment record
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                setIsRefundDialogOpen(false);
-                setIsDetailsDialogOpen(false);
-                setSelectedPayment(null);
-                setRefundReason('');
-                toast({
-                    title: "Success",
-                    description: `Payment #${paymentId} has been refunded.`,
-                    variant: "success",
-                });
-            },
-            onError: (error) => {
-                console.error("Payment refund failed:", error);
-                let errorMessage = "Failed to refund payment.";
-                if (error && typeof error === 'object') {
-                    if (error.status) {
-                        errorMessage += ` Status Code: ${error.status}.`;
+        router.patch(
+            route("admin.payments.refund", paymentId),
+            { reason: reason },
+            {
+                // New route, using PATCH as it's an update to the payment record
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    setIsRefundDialogOpen(false);
+                    setIsDetailsDialogOpen(false);
+                    setSelectedPayment(null);
+                    setRefundReason("");
+                    toast({
+                        title: "Success",
+                        description: `Payment #${paymentId} has been refunded.`,
+                        variant: "success",
+                    });
+                },
+                onError: (error) => {
+                    console.error("Payment refund failed:", error);
+                    let errorMessage = "Failed to refund payment.";
+                    if (error && typeof error === "object") {
+                        if (error.status) {
+                            errorMessage += ` Status Code: ${error.status}.`;
+                        }
+                        if (error.message) {
+                            errorMessage = error.message;
+                        } else if (Object.keys(error).length > 0) {
+                            const firstErrorKey = Object.keys(error)[0];
+                            errorMessage = error[firstErrorKey];
+                        }
                     }
-                    if (error.message) {
-                        errorMessage = error.message;
-                    } else if (Object.keys(error).length > 0) {
-                        const firstErrorKey = Object.keys(error)[0];
-                        errorMessage = error[firstErrorKey];
-                    }
-                }
-                toast({
-                    title: "Error",
-                    description: errorMessage,
-                    variant: "destructive",
-                });
-            },
-            onFinish: () => {
-                setIsProcessing(false);
+                    toast({
+                        title: "Error",
+                        description: errorMessage,
+                        variant: "destructive",
+                    });
+                },
+                onFinish: () => {
+                    setIsProcessing(false);
+                },
             }
-        });
+        );
     };
 
     const handleViewDetailsClick = (payment) => {
@@ -360,7 +483,9 @@ const PendingPayments = ({ payments, statuses }) => {
         const Icon = style.icon;
         return (
             <span
-                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${style.bgColor || 'bg-gray-100'} ${style.textColor || 'text-gray-800'}`}
+                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+                    style.bgColor || "bg-gray-100"
+                } ${style.textColor || "text-gray-800"}`}
             >
                 {Icon && <Icon className="w-3.5 h-3.5" />}
                 {style.label || status}
@@ -368,11 +493,21 @@ const PendingPayments = ({ payments, statuses }) => {
         );
     };
 
-    const filteredPayments = payments.filter(payment =>
-        payment.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.booking?.booking_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.booking?.customer?.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.booking?.customer?.last_name.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredPayments = payments.filter(
+        (payment) =>
+            payment.id
+                .toString()
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+            payment.booking?.booking_number
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+            payment.booking?.customer?.first_name
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase()) ||
+            payment.booking?.customer?.last_name
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -381,10 +516,14 @@ const PendingPayments = ({ payments, statuses }) => {
                 {/* Header */}
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Pending Payments</h1>
-                        <p className="text-gray-500 mt-1">Review and manage payments awaiting confirmation.</p>
+                        <h1 className="text-3xl font-bold text-gray-800">
+                            Pending Payments
+                        </h1>
+                        <p className="text-gray-500 mt-1">
+                            Review and manage payments awaiting confirmation.
+                        </p>
                     </div>
-                     <div className="relative">
+                    <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                             type="text"
@@ -401,32 +540,83 @@ const PendingPayments = ({ payments, statuses }) => {
                     <table className="w-full text-sm text-left text-gray-600">
                         <thead className="bg-gray-50/80 text-xs text-gray-700 uppercase tracking-wider">
                             <tr>
-                                <th scope="col" className="px-6 py-4">Payment ID</th>
-                                <th scope="col" className="px-6 py-4">Booking ID</th>
-                                <th scope="col" className="px-6 py-4">Guest Name</th>
-                                <th scope="col" className="px-6 py-4 text-right">Amount</th>
-                                <th scope="col" className="px-6 py-4">Method</th>
-                                <th scope="col" className="px-6 py-4">Date</th>
-                                <th scope="col" className="px-6 py-4 text-center">Status</th>
-                                <th scope="col" className="px-6 py-4 text-center">Actions</th>
+                                <th scope="col" className="px-6 py-4">
+                                    Payment ID
+                                </th>
+                                <th scope="col" className="px-6 py-4">
+                                    Booking ID
+                                </th>
+                                <th scope="col" className="px-6 py-4">
+                                    Guest Name
+                                </th>
+                                <th
+                                    scope="col"
+                                    className="px-6 py-4 text-right"
+                                >
+                                    Amount
+                                </th>
+                                <th scope="col" className="px-6 py-4">
+                                    Method
+                                </th>
+                                <th scope="col" className="px-6 py-4">
+                                    Date
+                                </th>
+                                <th
+                                    scope="col"
+                                    className="px-6 py-4 text-center"
+                                >
+                                    Status
+                                </th>
+                                <th
+                                    scope="col"
+                                    className="px-6 py-4 text-center"
+                                >
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {filteredPayments.length > 0 ? (
                                 filteredPayments.map((payment) => (
-                                    <tr key={payment.id} className="hover:bg-gray-50 transition">
-                                        <td className="px-6 py-4 font-mono text-blue-600">{payment.id}</td>
-                                        <td className="px-6 py-4">{payment.booking?.booking_number}</td>
-                                        <td className="px-6 py-4 font-semibold text-gray-800">
-                                            {payment.booking?.customer?.first_name}{" "}
-                                            {payment.booking?.customer?.last_name}
+                                    <tr
+                                        key={payment.id}
+                                        className="hover:bg-gray-50 transition"
+                                    >
+                                        <td className="px-6 py-4 font-mono text-blue-600">
+                                            {payment.id}
                                         </td>
-                                        <td className="px-6 py-4 font-mono text-right">${parseFloat(payment.amount).toFixed(2)}</td>
+                                        <td className="px-6 py-4">
+                                            {payment.booking?.booking_number}
+                                        </td>
+                                        <td className="px-6 py-4 font-semibold text-gray-800">
+                                            {
+                                                payment.booking?.customer
+                                                    ?.first_name
+                                            }{" "}
+                                            {
+                                                payment.booking?.customer
+                                                    ?.last_name
+                                            }
+                                        </td>
+                                        <td className="px-6 py-4 font-mono text-right">
+                                            ₱
+                                            {parseFloat(payment.amount).toFixed(
+                                                2
+                                            )}
+                                        </td>
                                         <td className="px-6 py-4 flex items-center gap-2">
-                                            {methodIcons[payment.payment_method]}
+                                            {
+                                                methodIcons[
+                                                    payment.payment_method
+                                                ]
+                                            }
                                             {payment.payment_method}
                                         </td>
-                                        <td className="px-6 py-4">{new Date(payment.payment_date).toLocaleDateString()}</td>
+                                        <td className="px-6 py-4">
+                                            {new Date(
+                                                payment.payment_date
+                                            ).toLocaleDateString()}
+                                        </td>
                                         <td className="px-6 py-4 text-center">
                                             {/* Always pending status on this page */}
                                             {getStatusChip(payment.status)}
@@ -435,10 +625,14 @@ const PendingPayments = ({ payments, statuses }) => {
                                             <div className="flex items-center justify-center gap-2">
                                                 <Button
                                                     size="sm"
-                                                    onClick={() => handleViewDetailsClick(payment)}
+                                                    onClick={() =>
+                                                        handleViewDetailsClick(
+                                                            payment
+                                                        )
+                                                    }
                                                     title="View Payment Details"
                                                 >
-                                                    <Eye className="w-4 h-4 mr-1"/>
+                                                    <Eye className="w-4 h-4 mr-1" />
                                                     View Details
                                                 </Button>
                                             </div>
@@ -447,10 +641,15 @@ const PendingPayments = ({ payments, statuses }) => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="8" className="px-6 py-10 text-center text-gray-500">
+                                    <td
+                                        colSpan="8"
+                                        className="px-6 py-10 text-center text-gray-500"
+                                    >
                                         <div className="flex flex-col items-center justify-center">
-                                            <FileText className="w-10 h-10 text-gray-400 mb-2"/>
-                                            <p className="font-semibold">No pending payments found.</p>
+                                            <FileText className="w-10 h-10 text-gray-400 mb-2" />
+                                            <p className="font-semibold">
+                                                No pending payments found.
+                                            </p>
                                         </div>
                                     </td>
                                 </tr>
@@ -498,7 +697,7 @@ const PendingPayments = ({ payments, statuses }) => {
                     isProcessing={isProcessing}
                 />
             )}
-             {selectedPayment && (
+            {selectedPayment && (
                 <RefundPaymentDialog
                     payment={selectedPayment}
                     open={isRefundDialogOpen}

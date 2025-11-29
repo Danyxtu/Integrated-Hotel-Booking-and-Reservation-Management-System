@@ -279,7 +279,7 @@ const PublicBookingModal = ({
                                             {room.name}
                                         </div>
                                         <div className="text-sm text-gray-500">
-                                            ${room.price} / night
+                                            ₱{room.price} / night
                                         </div>
                                         <div className="text-sm text-gray-400">
                                             {room.features

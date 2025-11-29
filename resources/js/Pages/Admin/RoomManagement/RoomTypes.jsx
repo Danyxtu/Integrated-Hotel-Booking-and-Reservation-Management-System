@@ -43,10 +43,7 @@ const RoomTypeDetailsModal = ({ roomType, open, onOpenChange }) => {
                 <div className="grid gap-6 py-4">
                     <div className="w-full h-64 rounded-lg overflow-hidden">
                         <ImageWithFallback
-                            src={getImageUrl(
-                                roomType.image_path,
-                                roomType.image_url
-                            )}
+                            src={`/storage/public/${roomType.image_path}`}
                             alt={roomType.name}
                             className="w-full h-full object-cover"
                             fallbackComponent={
@@ -533,7 +530,7 @@ const RoomTypes = ({ roomTypes, flash, errors }) => {
                                 onClick={() => handleViewDetails(type)}
                             >
                                 <img
-                                    src={`/storage/${type.image_path}`}
+                                    src={`/storage/public/${type.image_path}`}
                                     alt={type.name}
                                 />
                             </div>

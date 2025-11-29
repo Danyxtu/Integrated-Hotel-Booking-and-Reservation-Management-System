@@ -40,9 +40,9 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
     });
 
     const images = room.image_path
-        ? [getImageUrl(room.image_path, room.image_url || room.room_type?.image_url)]
+        ? [`/storage/public/${room.image_path}`]
         : room.images && room.images.length > 0
-        ? room.images.map((img) => getImageUrl(img))
+        ? room.images.map((img) => `/storage/public/${img}`)
         : ["https://via.placeholder.com/600x400"];
 
     const nextImage = () => {
@@ -158,7 +158,7 @@ const RoomDetailModal = ({ room, onClose, filters, isAvailable }) => {
                                         <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
                                             <span>Total:</span>{" "}
                                             <span className="text-blue-600">
-                                                ${data.total_price.toFixed(2)}
+                                                ₱{data.total_price.toFixed(2)}
                                             </span>
                                         </div>
                                     </div>

@@ -15,7 +15,7 @@ import {
     Baby,
     Menu,
     X,
-    PesoSign,
+    PhilippinePeso,
 } from "lucide-react";
 import { Link, usePage } from "@inertiajs/react";
 import PublicBookingModal from "@/Components/PublicBookingModal";
@@ -161,7 +161,11 @@ export default function Welcome({ rooms, searchParams }) {
                         </a>
                         {user && (
                             <Link
-                                href={route("customer.dashboard")}
+                                href={
+                                    user.role === "user"
+                                        ? route("customer.dashboard")
+                                        : route("admin.dashboard")
+                                }
                                 className="text-gray-700 hover:text-blue-600 font-medium"
                             >
                                 Dashboard
@@ -170,7 +174,7 @@ export default function Welcome({ rooms, searchParams }) {
                     </nav>
                     {!user && (
                         <Link
-                            className=" font-medium block sm:hidden bg-blue-600 text-white px-4 py-2 rounded-md"
+                            className="font-medium bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
                             href={route("login")}
                         >
                             Login Here
@@ -232,7 +236,11 @@ export default function Welcome({ rooms, searchParams }) {
                         </a>
                         {user && (
                             <Link
-                                href={route("customer.dashboard")}
+                                href={
+                                    user.role === "user"
+                                        ? route("customer.dashboard")
+                                        : route("admin.dashboard")
+                                }
                                 className="text-gray-700 hover:text-blue-600 font-medium text-lg"
                                 onClick={() => setShowMobileMenu(false)}
                             >
@@ -284,8 +292,21 @@ export default function Welcome({ rooms, searchParams }) {
                                     <input
                                         type="date"
                                         value={checkIn}
+                                        min={
+                                            new Date()
+                                                .toISOString()
+                                                .split("T")[0]
+                                        }
                                         onChange={(e) => {
-                                            setCheckIn(e.target.value);
+                                            const newCheckIn = e.target.value;
+                                            setCheckIn(newCheckIn);
+                                            // Clear checkout if it's before the new checkin
+                                            if (
+                                                checkOut &&
+                                                newCheckIn > checkOut
+                                            ) {
+                                                setCheckOut("");
+                                            }
                                             if (errors.checkIn)
                                                 setErrors({
                                                     ...errors,
@@ -312,6 +333,13 @@ export default function Welcome({ rooms, searchParams }) {
                                     <input
                                         type="date"
                                         value={checkOut}
+                                        min={
+                                            checkIn ||
+                                            new Date()
+                                                .toISOString()
+                                                .split("T")[0]
+                                        }
+                                        disabled={!checkIn}
                                         onChange={(e) => {
                                             setCheckOut(e.target.value);
                                             if (errors.checkOut)
@@ -324,11 +352,16 @@ export default function Welcome({ rooms, searchParams }) {
                                             errors.checkOut
                                                 ? "border-red-500"
                                                 : "border-gray-200"
-                                        } focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none`}
+                                        } focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition outline-none disabled:bg-gray-100 disabled:cursor-not-allowed`}
                                     />
                                     {errors.checkOut && (
                                         <p className="text-red-500 text-xs mt-1">
                                             {errors.checkOut}
+                                        </p>
+                                    )}
+                                    {!checkIn && (
+                                        <p className="text-gray-500 text-xs mt-1">
+                                            Please select check-in date first
                                         </p>
                                     )}
                                 </div>
@@ -392,7 +425,7 @@ export default function Welcome({ rooms, searchParams }) {
                         {standardRoom && (
                             <>
                                 <img
-                                    src={getImageUrl(standardRoom.image_path)}
+                                    src={`/storage/public/${standardRoom.image_path}`}
                                     alt={standardRoom.name}
                                     className="relative rounded-3xl shadow-2xl w-full h-[600px] object-cover"
                                 />
@@ -403,7 +436,7 @@ export default function Welcome({ rooms, searchParams }) {
                                                 Starting from
                                             </p>
                                             <div className="flex items-center gap-1">
-                                                <PesoSign className="w-6 h-6 text-gray-900" />
+                                                <PhilippinePeso className="w-6 h-6 text-gray-900" />
                                                 <p className="text-3xl font-bold text-gray-900">
                                                     {standardRoom.price}
                                                     <span className="text-lg text-gray-500">
@@ -475,7 +508,7 @@ export default function Welcome({ rooms, searchParams }) {
                             >
                                 <div className="relative overflow-hidden h-64">
                                     <img
-                                        src={getImageUrl(room.image_path)}
+                                        src={`/storage/public/${room.image_path}`}
                                         alt={room.name}
                                         className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                     />
@@ -506,7 +539,7 @@ export default function Welcome({ rooms, searchParams }) {
                                                 From
                                             </p>
                                             <div className="flex items-center gap-1">
-                                                <PesoSign className="w-6 h-6 text-gray-900" />
+                                                <PhilippinePeso className="w-6 h-6 text-gray-900" />
                                                 <p className="text-3xl font-bold text-gray-900">
                                                     {room.price}
                                                     <span className="text-lg text-gray-500">

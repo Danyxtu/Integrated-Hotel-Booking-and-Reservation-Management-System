@@ -59,17 +59,18 @@ const statusStyles = {
 const CheckOutsToday = ({ checkouts }) => {
     const [activeCategory, setActiveCategory] = useState("today"); // 'today' or 'recent'
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
 
     const todaysCheckouts = checkouts.filter(
-        (b) => new Date(b.check_out_date).toISOString().split('T')[0] === today
+        (b) => new Date(b.check_out_date).toISOString().split("T")[0] === today
     );
 
     const recentCheckouts = checkouts.filter(
         (b) => b.status_label === "Checked Out"
     );
 
-    const currentCheckouts = activeCategory === "today" ? todaysCheckouts : recentCheckouts;
+    const currentCheckouts =
+        activeCategory === "today" ? todaysCheckouts : recentCheckouts;
 
     const formatDate = (dateString) => {
         if (!dateString) return "";
@@ -150,7 +151,6 @@ const CheckOutsToday = ({ checkouts }) => {
                     </button>
                 </div>
 
-
                 {/* Bookings Table */}
                 <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200/80">
                     <table className="w-full text-sm text-left text-gray-600">
@@ -191,7 +191,7 @@ const CheckOutsToday = ({ checkouts }) => {
                                         {booking.room?.room_type?.name}
                                     </td>
                                     <td className="px-6 py-4 font-mono text-right">
-                                        $
+                                        ₱
                                         {parseFloat(
                                             booking.total_price
                                         ).toFixed(2)}
