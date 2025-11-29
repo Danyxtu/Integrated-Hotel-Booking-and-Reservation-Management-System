@@ -114,7 +114,6 @@ export default function Welcome({ rooms, searchParams }) {
         },
     ];
 
-
     return (
         <div className="min-h-screen  bg-gradient-to-br from-slate-50 via-white to-blue-50">
             <Toaster />
@@ -230,7 +229,7 @@ export default function Welcome({ rooms, searchParams }) {
                         >
                             Contact
                         </a>
-                        {user ? (
+                        {user && (
                             <Link
                                 href={route("customer.dashboard")}
                                 className="text-gray-700 hover:text-blue-600 font-medium text-lg"
@@ -238,15 +237,14 @@ export default function Welcome({ rooms, searchParams }) {
                             >
                                 Dashboard
                             </Link>
-                        ) : (
-                            <Link
-                                className="font-medium bg-blue-600 text-white px-6 py-3 rounded-md text-lg"
-                                href={route("login")}
-                                onClick={() => setShowMobileMenu(false)}
-                            >
-                                Login Here
-                            </Link>
                         )}
+                        <Link
+                            className="font-medium bg-blue-600  text-white px-6 py-3 rounded-md text-lg"
+                            href={route("login")}
+                            onClick={() => setShowMobileMenu(false)}
+                        >
+                            Login Here
+                        </Link>
                     </nav>
                 </div>
             )}

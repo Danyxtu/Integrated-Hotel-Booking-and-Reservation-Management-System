@@ -533,8 +533,8 @@ const RoomTypes = ({ roomTypes, flash, errors }) => {
                                 onClick={() => handleViewDetails(type)}
                             >
                                 <img
-                                    src={`/storage/${roomType.image_path}`}
-                                    alt={roomType.name}
+                                    src={`/storage/${type.image_path}`}
+                                    alt={type.name}
                                 />
                             </div>
                             <div className="p-4 flex-grow flex flex-col">
